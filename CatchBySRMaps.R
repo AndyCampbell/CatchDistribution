@@ -11,6 +11,8 @@ load(".//..//Data//RData//NEAFC.rda")
 source("SRAnalyFuncs.R")
 
 
+#31/08/2017 WGWIDE 2017 
+
 #quarterly WG report maps
 #for (y in seq(2013,2016)){
 for (y in seq(2016,2016)){
