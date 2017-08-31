@@ -136,7 +136,7 @@ processFile <- function(f,srcpath,tgtpath){
 }
 
 #SR master data
-wb <- loadWorkbook(".//..//RData//StatRectMaster.xlsx", create=FALSE)
+wb <- loadWorkbook(".//..//Data//RData//StatRectMaster.xlsx", create=FALSE)
 
 dfMasterSR <- readWorksheet(wb, sheet = "Sheet1", startRow = 1, startCol = 1,
                             endCol = 16, header = TRUE, 
@@ -149,18 +149,18 @@ gc()
 write(c("Ctry","Year","SR","Lat","Lon","PType","PNum","Catch"), file = ".\\Data\\WGCatchBySR.csv", sep = ",", ncolumns = 8)
 
 #year files
-yfiles <- list.files(path=".\\..\\",pattern="_Data")
+yfiles <- list.files(path=".\\..\\Data\\",pattern="_Data")
 
 for (y in yfiles) {
 
-  if (file.exists(paste0(".\\..\\",y,"\\Finalxls\\Latest"))) {
+  if (file.exists(paste0(".\\..\\Data\\",y,"\\Finalxls\\Latest"))) {
     
     #list of data files
-    dfiles <- list.files(path=paste0(".\\..\\",y,"\\Finalxls\\Latest"),pattern=".xlsx")
+    dfiles <- list.files(path=paste0(".\\..\\Data\\",y,"\\Finalxls\\Latest"),pattern=".xlsx")
 
     if (length(dfiles)>0) {
       lapply(dfiles,processFile,
-             srcpath = paste0(".\\..\\",y,"\\Finalxls\\Latest"),
+             srcpath = paste0(".\\..\\Data\\",y,"\\Finalxls\\Latest"),
              tgtpath = ".\\Data\\")  
     }
     
