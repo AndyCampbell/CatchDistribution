@@ -6,8 +6,8 @@
 rm(list=ls())
 gc()
 
-load(".//..//RData//coast.rda")
-load(".//..//RData//NEAFC.rda")
+load(".//..//Data//RData//coast.rda")
+load(".//..//Data//RData//NEAFC.rda")
 source("SRAnalyFuncs.R")
 
 
@@ -82,7 +82,7 @@ for (y in seq(2016,2016)){
 
 
 #quarterly by country
-for (cry in c('IC','NO','DE','DK','BE','LT','ES','IE','PL','FO','BQ','NL','RU','SE','UKE','UKN','UKS','FR')) {
+for (cry in c('IC','NO','DE','DK','BE','LT','ES','IE','PL','FO','BQ','NL','RU','SE','UKE','UKN','UKS','FR','GL')) {
   #for (y in seq(2013,2016)){
    for (y in seq(2016,2016)){
      for (q in 1:4){
@@ -220,6 +220,7 @@ for (y in seq(2013,2016)){
 }
 
 
+#no guarantees from here!
 
 
 ############################################################################################
