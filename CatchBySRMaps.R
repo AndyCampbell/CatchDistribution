@@ -84,7 +84,7 @@ for (y in seq(2016,2016)){
 
 
 #quarterly by country
-for (cry in c('IC','NO','DE','DK','BE','LT','ES','IE','PL','FO','BQ','NL','RU','SE','UKE','UKN','UKS','FR','GL')) {
+for (cry in c('IC','NO','DE','DK','BE','LT','ES','IE','PL','FO','BQ','NL','RU','SE','UKE','UKN','UKS','FR','GL','PT')) {
   #for (y in seq(2013,2016)){
    for (y in seq(2016,2016)){
      for (q in 1:4){
