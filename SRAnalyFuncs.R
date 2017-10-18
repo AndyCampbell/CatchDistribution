@@ -1,7 +1,10 @@
 #functions to support plotting of catch by SR
 
-fPlotBaseMap <- function(xlim=c(-12,8),ylim=c(42,65),xlabs=TRUE,ylabs=TRUE,refresh=FALSE){
-  #plots coast, SR boundaries, ICES area boundaries
+fPlotBaseMap <- function(xlim=c(-12,8),ylim=c(42,65),xaxis=TRUE,xlabs=TRUE,yaxis=TRUE,
+                         ylabs=TRUE,refresh=FALSE,SR=TRUE,ICES=TRUE){
+  
+  #plots coast, SR boundaries, 
+  #ICES area boundaries (ICES=TRUE)
   
   if (!refresh) {
     plot(c(xlim[1],xlim[2],xlim[2],xlim[1]),
@@ -11,8 +14,10 @@ fPlotBaseMap <- function(xlim=c(-12,8),ylim=c(42,65),xlabs=TRUE,ylabs=TRUE,refre
          type="n",
          axes=FALSE)}
   
-  abline(h=seq(30,80,by=0.5),col="grey")
-  abline(v=seq(-40,30,by=1),col="grey")
+  if (SR) {
+    abline(h=seq(30,80,by=0.5),col="grey")
+    abline(v=seq(-40,30,by=1),col="grey")
+  }
   
   for (i in 1:length(coast)){
     if (!is.null(coast[[i]])){
@@ -24,68 +29,70 @@ fPlotBaseMap <- function(xlim=c(-12,8),ylim=c(42,65),xlabs=TRUE,ylabs=TRUE,refre
     }
   }
   
-  #ices areas
-  #IVa
-  lines(x=c(8,-4,-4),y=c(62,62,58),col="black")
-  lines(x=c(-2,7,7),y=c(57.5,57.5,58),col="black")
-  #IVb
-  lines(x=c(9,8,8,7),y=c(57,57,57.5,57.5),col="black")
-  lines(x=c(8,0),y=c(53.5,53.5),col="black")
-  #IVc
-  lines(x=c(2,0),y=c(51,51),col="black")
-  #VIId
-  lines(x=c(-2,-2),y=c(51,49.7),col="black")
-  #VIIe
-  lines(x=c(-5.2,-7,-7,-5,-5,-4),y=c(50,50,49.5,49.5,48,48),col="black")
-  #VIIf
-  lines(x=c(-7,-7,-6,-6,-5,-5),y=c(50,50.5,50.5,51,51,51.7),col="black")
-  #VIIa
-  lines(x=c(-5,-8),y=c(52,52),col="black")
-  lines(x=c(-5,-6),y=c(55,55),col="black")
-  #VIIg
-  lines(x=c(-7,-9,-9),y=c(50,50,52),col="black")
-  #VIIh
-  lines(x=c(-5,-9,-9,-7),y=c(48,48,50,50),col="black")
-  #VIIj
-  lines(x=c(-9,-12,-12,-9),y=c(48,48,52.5,52.5),col="black")
-  #VIIb
-  lines(x=c(-12,-12,-8),y=c(52.5,54.5,54.5),col="black")
-  #VIa
-  lines(x=c(-12,-12,-5,-5,-4,-4),y=c(54.5,60,60,60.5,60.5,58),col="black")
-  #VIb
-  lines(x=c(-12,-18,-18,-12),y=c(54.5,54.5,60,60),col="black")
-  #VIIc
-  lines(x=c(-12,-18,-18,-12),y=c(52.5,52.5,54.5,54.5),col="black")
-  #VIIk
-  lines(x=c(-12,-18,-18,-12),y=c(48,48,52.5,52.5),col="black")
-  #VIIIa
-  lines(x=c(-8,-8,-6,-6,-5,-5,-1),y=c(48,47.5,47.5,47,47,46,46),col="black")
-  #VIIIb
-  lines(x=c(-4,-4,-3,-3,-2,-2),y=c(46,45.5,45.5,44.5,44.5,43),col="black")
-  #VIIId
-  lines(x=c(-11,-11,-3),y=c(48,44.5,44.5),col="black")
-  #VIIIc
-  lines(x=c(-11,-11,-9),y=c(44.5,43,43),col="black")
-  #VIIIe
-  lines(x=c(-18,-18,-11),y=c(48,43,43),col="black")
-  #IXa
-  lines(x=c(-11,-11,-5.6),y=c(43,36,36),col="black")
-  #IXa
-  lines(x=c(-11,-18,-18,-11),y=c(43,43,36,36),col="black")
-  #X
-  lines(x=c(-18,-42,-42,-18),y=c(43,43,36,36),col="black")
-  #XII
-  lines(x=c(-15,-27,-27,-42,-42,-18,-18,-15,-15),y=c(62,62,59,59,48,48,60,60,62),col="black")
-  #XIVa
-  lines(x=c(-27,-27,-11,-11),y=c(69,68,68,85),col="black")
-  #XIVb
-  lines(x=c(-27,-27,-44,-44),y=c(68,59,59,61),col="black")
-  #Va
-  lines(x=c(-11,-27,-27,-15,-15,-11,-11),y=c(68,68,62,62,63,63,68),col="black")
-  #Vb
-  lines(x=c(-4,-15,-15,-5,-5,-4,-4),y=c(63,63,60,60,60.5,60.5,63),col="black")
-  #IIa
-  lines(x=c(6,-4,-4,-11,-11,30,30,26,26),y=c(62,62,63,63,73.5,73.5,72,72,70),col="black")
+  if (ICES) {
+    #ices areas
+    #IVa
+    lines(x=c(8,-4,-4),y=c(62,62,58),col="black")
+    lines(x=c(-2,7,7),y=c(57.5,57.5,58),col="black")
+    #IVb
+    lines(x=c(9,8,8,7),y=c(57,57,57.5,57.5),col="black")
+    lines(x=c(8,0),y=c(53.5,53.5),col="black")
+    #IVc
+    lines(x=c(2,0),y=c(51,51),col="black")
+    #VIId
+    lines(x=c(-2,-2),y=c(51,49.7),col="black")
+    #VIIe
+    lines(x=c(-5.2,-7,-7,-5,-5,-4),y=c(50,50,49.5,49.5,48,48),col="black")
+    #VIIf
+    lines(x=c(-7,-7,-6,-6,-5,-5),y=c(50,50.5,50.5,51,51,51.7),col="black")
+    #VIIa
+    lines(x=c(-5,-8),y=c(52,52),col="black")
+    lines(x=c(-5,-6),y=c(55,55),col="black")
+    #VIIg
+    lines(x=c(-7,-9,-9),y=c(50,50,52),col="black")
+    #VIIh
+    lines(x=c(-5,-9,-9,-7),y=c(48,48,50,50),col="black")
+    #VIIj
+    lines(x=c(-9,-12,-12,-9),y=c(48,48,52.5,52.5),col="black")
+    #VIIb
+    lines(x=c(-12,-12,-8),y=c(52.5,54.5,54.5),col="black")
+    #VIa
+    lines(x=c(-12,-12,-5,-5,-4,-4),y=c(54.5,60,60,60.5,60.5,58),col="black")
+    #VIb
+    lines(x=c(-12,-18,-18,-12),y=c(54.5,54.5,60,60),col="black")
+    #VIIc
+    lines(x=c(-12,-18,-18,-12),y=c(52.5,52.5,54.5,54.5),col="black")
+    #VIIk
+    lines(x=c(-12,-18,-18,-12),y=c(48,48,52.5,52.5),col="black")
+    #VIIIa
+    lines(x=c(-8,-8,-6,-6,-5,-5,-1),y=c(48,47.5,47.5,47,47,46,46),col="black")
+    #VIIIb
+    lines(x=c(-4,-4,-3,-3,-2,-2),y=c(46,45.5,45.5,44.5,44.5,43),col="black")
+    #VIIId
+    lines(x=c(-11,-11,-3),y=c(48,44.5,44.5),col="black")
+    #VIIIc
+    lines(x=c(-11,-11,-9),y=c(44.5,43,43),col="black")
+    #VIIIe
+    lines(x=c(-18,-18,-11),y=c(48,43,43),col="black")
+    #IXa
+    lines(x=c(-11,-11,-5.6),y=c(43,36,36),col="black")
+    #IXa
+    lines(x=c(-11,-18,-18,-11),y=c(43,43,36,36),col="black")
+    #X
+    lines(x=c(-18,-42,-42,-18),y=c(43,43,36,36),col="black")
+    #XII
+    lines(x=c(-15,-27,-27,-42,-42,-18,-18,-15,-15),y=c(62,62,59,59,48,48,60,60,62),col="black")
+    #XIVa
+    lines(x=c(-27,-27,-11,-11),y=c(69,68,68,85),col="black")
+    #XIVb
+    lines(x=c(-27,-27,-44,-44),y=c(68,59,59,61),col="black")
+    #Va
+    lines(x=c(-11,-27,-27,-15,-15,-11,-11),y=c(68,68,62,62,63,63,68),col="black")
+    #Vb
+    lines(x=c(-4,-15,-15,-5,-5,-4,-4),y=c(63,63,60,60,60.5,60.5,63),col="black")
+    #IIa
+    lines(x=c(6,-4,-4,-11,-11,30,30,26,26),y=c(62,62,63,63,73.5,73.5,72,72,70),col="black")
+  }
   
   for (i in 1:length(coast)){
     if (!is.null(coast[[i]])){
@@ -99,10 +106,11 @@ fPlotBaseMap <- function(xlim=c(-12,8),ylim=c(42,65),xlabs=TRUE,ylabs=TRUE,refre
   
   box()
   
-  axis(side=1,at=seq(xlim[1],xlim[2],by=2),cex.axis=1,labels=xlabs)
-  axis(side=2,at=seq(ylim[1],ylim[2],by=2),cex.axis=1,las=2,labels=ylabs)
+  if (xaxis) {axis(side=1,at=seq(xlim[1],xlim[2],by=2),cex.axis=1,labels=xlabs)}
+  if (yaxis) {axis(side=2,at=seq(ylim[1],ylim[2],by=2),cex.axis=1,las=2,labels=ylabs)}
   
 }
+
 
 fSubset <- function(src = ".\\Data\\WGCatchBySR.csv", y, ptype, pnum, Cry){
   
