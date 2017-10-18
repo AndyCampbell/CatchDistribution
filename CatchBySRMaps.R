@@ -14,6 +14,7 @@ Months <- c("January","February","March","April","May","June","July","August","S
 
 
 #18/10/2017 Plots for species summary pages in 2017 Stockbook
+#Mackerel
 #plot of catch distribution for entire year for 1) all nations 2) Ireland only
 #no legend, no grid lines, no axis notations
 
@@ -160,6 +161,55 @@ for (m in 1:12){
     
   dev.off()
     
+}
+
+
+#Boarfish
+
+for (y in c(2014,2015,2016)) {
+  
+jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\IE",y,"_BOC_CBySR.jpg"),
+     width=1200, height=1600, quality=100)
+
+dfSR <- fSubset(src = ".\\Data\\boc.27.6-8WGCatchBySR.csv",y = y, ptype = "Y", pnum = y)
+
+fPlotBaseMap(xlim=c(-17,5),ylim=c(40,62),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+with(filter(dfSR, Tot<100 & Tot>=1),
+     for (i in 1:nrow(filter(dfSR, Tot<100))){
+       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+               col="lightpink", border="lightpink")
+     }
+)
+
+with(filter(dfSR, Tot<1000 & Tot>=100),
+     for (i in 1:nrow(filter(dfSR, Tot<1000 & Tot>=100))){
+       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+               col="lightpink3", border="lightpink3")
+     }
+)
+
+with(filter(dfSR, Tot<10000 & Tot>=1000),
+     for (i in 1:nrow(filter(dfSR, Tot<10000 & Tot>=1000))){
+       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+               col="firebrick2", border="firebrick2")
+     }
+)
+
+with(filter(dfSR, Tot>=10000),
+     for (i in 1:nrow(filter(dfSR, Tot>=10000))){
+       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+               col="firebrick4", border="firebrick4")
+     }
+)
+
+fPlotBaseMap(xlim=c(-17,5),ylim=c(40,62),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+dev.off()
 }
 
 
