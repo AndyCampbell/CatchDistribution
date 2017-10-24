@@ -1,5 +1,22 @@
 #functions to support plotting of catch by SR
 
+fPlotDist <- function(dfSub, min, max, fill.col, border.col, avg=FALSE){
+  
+  if (!avg) {
+    dfSub <- filter(dfSub, Tot<=max & Tot>min)
+  } else {
+    dfSub <- filter(dfSub, Avg<=max & Avg>min)
+  }
+  
+  dfSub <- inner_join(dfSub,SR,by=c("SR"="SR"))
+  
+  for (i in 1:nrow(dfSub)){
+    polygon(c(dfSub$West[i],dfSub$East[i],dfSub$East[i],dfSub$West[i],dfSub$West[i]),
+            c(dfSub$South[i],dfSub$South[i],dfSub$North[i],dfSub$North[i],dfSub$South[i]),
+            col=fill.col, border=border.col)}
+}
+
+
 fPlotBaseMap <- function(xlim=c(-12,8),ylim=c(42,65),xaxis=TRUE,xlabs=TRUE,yaxis=TRUE,
                          ylabs=TRUE,refresh=FALSE,SR=TRUE,ICES=TRUE){
   
@@ -120,7 +137,7 @@ fSubset <- function(src = ".\\Data\\WGCatchBySR.csv", y, ptype, pnum, Cry){
   #sum all catches per rectangle
   
   #src - the source data file
-  #y - the required year
+  #y - the source year(s)
   #ptype/pnum - the required period type and number
 
   months <- list("Q1"=c(1,2,3),"Q2"=c(4,5,6),"Q3"=c(7,8,9),"Q4"=c(10,11,12))
@@ -129,16 +146,42 @@ fSubset <- function(src = ".\\Data\\WGCatchBySR.csv", y, ptype, pnum, Cry){
   #read in the data
   df <- read.table(file = src, header = TRUE, sep = ",", stringsAsFactors = FALSE)
   
-  #select year
-  df <- filter(df, Year == y)
+  #select year(s)
+  #df <- filter(df, Year == y)
+  df <- filter(df, Year %in% y)
   
+  #select countries
   if (!(missing(Cry))) {df <- filter(df, Ctry %in% Cry)}
   
-  if (toupper(ptype) == "Q") {
+  #annual data
+  #if pnum is specified then return the summed catches for pnum
+  #otherwise, sum the catches over all years in y
+  if (toupper(ptype) == "Y"){
+    
+    if (!(missing(pnum))){
+      df <- df %>%
+        filter(Year %in% pnum) %>%
+        group_by(Year,SR) %>%
+        summarise(Tot=sum(Catch)) %>%
+        select(Year,SR,Tot)
+    } else {
+      df <- df %>%
+        group_by(Year,SR) %>%
+        summarise(SubTot=sum(Catch)) %>%
+        group_by(SR) %>%
+        summarise(Tot=sum(SubTot),Avg=sum(SubTot)/length(y))
+    }
+    
+    
+  } else if (toupper(ptype) == "Q") {
+    #quarterly
 
     df <- filter(df, (PType=="Q" & PNum==pnum) | (PType=="M" & PNum %in% unlist(months[paste0('Q',pnum)])))
 
-  } else if (toupper(ptype) == "M") {
+    #data frame to return
+    df <- select(group_by(df,Year,SR,Lat,Lon),Year,SR,Lat,Lon,Catch) %>% summarise(Tot=sum(Catch))
+    
+  } else if (toupper(ptype) == "M") {     #monthly
     
     #monthly data
     dfM <- filter(df, PType=="M" & PNum==pnum)
@@ -154,11 +197,13 @@ fSubset <- function(src = ".\\Data\\WGCatchBySR.csv", y, ptype, pnum, Cry){
     
     names(dfQ) <- names(dfM)
     df <- bind_rows(dfM,dfQ)
+
+    #data frame to return
+    df <- select(group_by(df,Year,SR,Lat,Lon),Year,SR,Lat,Lon,Catch) %>% summarise(Tot=sum(Catch))
     
   }
   
-  #data frame to return
-  df <- select(group_by(df,SR,Lat,Lon),SR,Lat,Lon,Catch) %>% summarise(Tot=sum(Catch))
+  df
   
 }
 

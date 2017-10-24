@@ -6,8 +6,13 @@
 rm(list=ls())
 gc()
 
+library(dplyr)
+
 load(".//..//Data//RData//coast.rda")
 load(".//..//Data//RData//NEAFC.rda")
+load(".//..//Data//RData//SR.rda")
+SR$SR <- levels(SR$Rect)[SR$Rect]     #SR as a character
+
 source("SRAnalyFuncs.R")
 
 Months <- c("January","February","March","April","May","June","July","August","September","October","November","December")
@@ -110,18 +115,18 @@ dev.off()
 #Monthly
 
 for (m in 1:12){
-
+  
   jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\2016_MAC_CBySR_M",m,".jpg"),
        width=1200, height=1600, quality=100)
   
   dfSR <- fSubset(y = 2016, ptype = "M", pnum = m)
-    
+  
   blnxlabs <- c(F,F,F,F,F,F,F,F,F,F,F,F)
   blnylabs <- c(F,F,F,F,F,F,F,F,F,F,F,F)
-    
+  
   fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),xaxis=F,xlabs=blnxlabs[m],
                yaxis=F,ylabs=blnylabs[m],SR=F,ICES=F)
-    
+  
   with(filter(dfSR, Tot<100 & Tot>=1),
        for (i in 1:nrow(filter(dfSR, Tot<100))){
          polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
@@ -129,170 +134,246 @@ for (m in 1:12){
                  col="lightpink", border="lightpink")
        }
   )
-    
+  
   with(filter(dfSR, Tot<1000 & Tot>=100),
-      for (i in 1:nrow(filter(dfSR, Tot<1000 & Tot>=100))){
-        polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
-                c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
-                col="lightpink3", border="lightpink3")
-      }
+       for (i in 1:nrow(filter(dfSR, Tot<1000 & Tot>=100))){
+         polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                 c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                 col="lightpink3", border="lightpink3")
+       }
   )
-    
+  
   with(filter(dfSR, Tot<10000 & Tot>=1000),
-      for (i in 1:nrow(filter(dfSR, Tot<10000 & Tot>=1000))){
-        polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
-                c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
-                col="firebrick2", border="firebrick2")
-      }
+       for (i in 1:nrow(filter(dfSR, Tot<10000 & Tot>=1000))){
+         polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                 c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                 col="firebrick2", border="firebrick2")
+       }
   )
-    
+  
   with(filter(dfSR, Tot>=10000),
-     for (i in 1:nrow(filter(dfSR, Tot>=10000))){
-       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
-               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
-               col="firebrick4", border="firebrick4")
-     }
+       for (i in 1:nrow(filter(dfSR, Tot>=10000))){
+         polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                 c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                 col="firebrick4", border="firebrick4")
+       }
   )
-    
+  
   fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),refresh=TRUE,xaxis=F,xlabs=blnxlabs[m],
                yaxis=F,ylabs=blnylabs[m],SR=FALSE,ICES=FALSE)
   
   text(x = -31, y = 76, labels = Months[m], cex = 4)
-    
+  
   dev.off()
-    
+  
 }
 
 
 #Boarfish
 
-for (y in c(2014,2015,2016)) {
+#annual
+for (y in seq(2007,2016)) {
   
-jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\IE",y,"_BOC_CBySR.jpg"),
+  jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\IE",y,"_BOC_CBySR.jpg"),
+       width=1200, height=1600, quality=100)
+  
+  #basebap
+  fPlotBaseMap(xlim=c(-17,5),ylim=c(40,62),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+  
+  #annual data
+  dfSub <- fSubset(src = ".\\Data\\boc.27.6-8WGCatchBySR.csv",y = y, ptype = "Y", pnum = y)
+  
+  range(dfSub$Tot)
+  
+  fPlotDist(dfSub,min=0,max=10,fill.col="lightpink",border.col="lightpink")
+  fPlotDist(dfSub,min=10,max=100,fill.col="lightpink3",border.col="lightpink3")
+  fPlotDist(dfSub,min=100,max=1000,fill.col="firebrick2",border.col="firebrick2")
+  fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+  
+  fPlotBaseMap(xlim=c(-17,5),ylim=c(40,62),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+  
+  legend(x = "bottomright",
+         legend = c("<10t","10t to 100t","100t to 1000t",">1000t"),
+         fill = c("lightpink","lightpink3","firebrick2","firebrick4"),
+         border = "black",
+         cex = 4,
+         title = paste0("Annual Catch ",y))
+  
+  dev.off()
+}
+
+#mean 2007-2015
+jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\IE_2007_2015_BOC_CBySR.jpg"),
      width=1200, height=1600, quality=100)
 
-dfSR <- fSubset(src = ".\\Data\\boc.27.6-8WGCatchBySR.csv",y = y, ptype = "Y", pnum = y)
-
+#basebap
 fPlotBaseMap(xlim=c(-17,5),ylim=c(40,62),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
 
-with(filter(dfSR, Tot<100 & Tot>=1),
-     for (i in 1:nrow(filter(dfSR, Tot<100))){
-       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
-               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
-               col="lightpink", border="lightpink")
-     }
-)
+#annual data
+dfSub <- fSubset(src = ".\\Data\\boc.27.6-8WGCatchBySR.csv",y = seq(2007,2015), ptype = "Y")
 
-with(filter(dfSR, Tot<1000 & Tot>=100),
-     for (i in 1:nrow(filter(dfSR, Tot<1000 & Tot>=100))){
-       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
-               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
-               col="lightpink3", border="lightpink3")
-     }
-)
+range(dfSub$Tot)
+range(dfSub$Avg)
 
-with(filter(dfSR, Tot<10000 & Tot>=1000),
-     for (i in 1:nrow(filter(dfSR, Tot<10000 & Tot>=1000))){
-       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
-               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
-               col="firebrick2", border="firebrick2")
-     }
-)
-
-with(filter(dfSR, Tot>=10000),
-     for (i in 1:nrow(filter(dfSR, Tot>=10000))){
-       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
-               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
-               col="firebrick4", border="firebrick4")
-     }
-)
+fPlotDist(dfSub,min=0,max=10,fill.col="lightpink",border.col="lightpink",avg=TRUE)
+fPlotDist(dfSub,min=10,max=100,fill.col="lightpink3",border.col="lightpink3",avg=TRUE)
+fPlotDist(dfSub,min=100,max=1000,fill.col="firebrick2",border.col="firebrick2",avg=TRUE)
+fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4",avg=TRUE)
 
 fPlotBaseMap(xlim=c(-17,5),ylim=c(40,62),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
 
-dev.off()
-}
+legend(x = "bottomright",
+       legend = c("<10t","10t to 100t","100t to 1000t",">1000t"),
+       fill = c("lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = "Average catch, 2007-2015")
 
+dev.off()
+
+
+#horse mackerel
+y <- 2016
+
+jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\WG",y,"_HOM_CBySR.jpg"),
+     width=1200, height=1600, quality=100)
+
+#basebap
+fPlotBaseMap(xlim=c(-15,10),ylim=c(36,66),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+#annual data
+dfSub <- fSubset(src = ".\\Data\\hom.27WGCatchBySR.csv",y = y, ptype = "Y", pnum = y)
+
+range(dfSub$Tot)
+
+fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+fPlotDist(dfSub,min=1,max=10,fill.col="lightpink",border.col="lightpink")
+fPlotDist(dfSub,min=10,max=100,fill.col="lightpink3",border.col="lightpink3")
+fPlotDist(dfSub,min=100,max=1000,fill.col="firebrick2",border.col="firebrick2")
+fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+
+fPlotBaseMap(xlim=c(-15,10),ylim=c(36,66),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<1t","1t to 10t","10t to 100t","100t to 1000t",">1000t"),
+       fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("Catch ",y))
+
+dev.off()
+
+#Irish catch
+y <- 2016
+
+jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\IE",y,"_HOM_CBySR.jpg"),
+     width=1200, height=1600, quality=100)
+
+#basebap
+fPlotBaseMap(xlim=c(-15,10),ylim=c(36,66),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+#annual data
+dfSub <- fSubset(src = ".\\Data\\hom.27WGCatchBySR.csv",y = y, ptype = "Y", pnum = y, Cry='IE')
+
+range(dfSub$Tot)
+
+fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+fPlotDist(dfSub,min=1,max=10,fill.col="lightpink",border.col="lightpink")
+fPlotDist(dfSub,min=10,max=100,fill.col="lightpink3",border.col="lightpink3")
+fPlotDist(dfSub,min=100,max=1000,fill.col="firebrick2",border.col="firebrick2")
+fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+
+fPlotBaseMap(xlim=c(-15,10),ylim=c(36,66),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<1t","1t to 10t","10t to 100t","100t to 1000t",">1000t"),
+       fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("Catch ",y))
+
+dev.off()
 
 #############################################################################################################
 #31/08/2017 WGWIDE 2017 
 
 #annual plot
 for (y in seq(2016,2016)){
-
-    jpeg(filename=paste0(".\\Plots\\WGPlots\\",y,"\\NEAFC_CBySR",y,".jpg"),
-         width=1200, height=1600, quality=100)
-    
-    dfSR <- fSubset(y = y, ptype = "Y", pnum = y)
-    
-    fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),xlabs=T,ylabs=T)
-    
-    with(filter(dfSR, Tot<100 & Tot>=1),
-         for (i in 1:nrow(filter(dfSR, Tot<100))){
-           polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
-                   c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
-                   col="lightpink", border="grey")
-         }
-    )
-    
-    with(filter(dfSR, Tot<1000 & Tot>=100),
-         for (i in 1:nrow(filter(dfSR, Tot<1000 & Tot>=100))){
-           polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
-                   c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
-                   col="lightpink3", border="grey")
-         }
-    )
-    
-    with(filter(dfSR, Tot<10000 & Tot>=1000),
-         for (i in 1:nrow(filter(dfSR, Tot<10000 & Tot>=1000))){
-           polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
-                   c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
-                   col="firebrick2", border="grey")
-         }
-    )
-    
-    with(filter(dfSR, Tot>=10000),
-         for (i in 1:nrow(filter(dfSR, Tot>=10000))){
-           polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
-                   c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
-                   col="firebrick4", border="grey")
-         }
-    )
-    
-    fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),refresh=TRUE,xlabs=T,ylabs=T)
-    
-    lines(Banana$Lon,Banana$Lat)
-    lines(Southern$Lon,Southern$Lat)
-    
-    legend(x="bottomright",
-           c("<100t","100t to 1000t","1000t to 10000t",">10000t"),
-           fill=c("antiquewhite","lightpink","firebrick2","firebrick4"),
-           border="black",
-           cex=2,
-           title = paste0(y))
-    
-    dev.off()
-
+  
+  jpeg(filename=paste0(".\\Plots\\WGPlots\\",y,"\\NEAFC_CBySR",y,".jpg"),
+       width=1200, height=1600, quality=100)
+  
+  dfSR <- fSubset(y = y, ptype = "Y", pnum = y)
+  
+  fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),xlabs=T,ylabs=T)
+  
+  with(filter(dfSR, Tot<100 & Tot>=1),
+       for (i in 1:nrow(filter(dfSR, Tot<100))){
+         polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                 c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                 col="lightpink", border="grey")
+       }
+  )
+  
+  with(filter(dfSR, Tot<1000 & Tot>=100),
+       for (i in 1:nrow(filter(dfSR, Tot<1000 & Tot>=100))){
+         polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                 c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                 col="lightpink3", border="grey")
+       }
+  )
+  
+  with(filter(dfSR, Tot<10000 & Tot>=1000),
+       for (i in 1:nrow(filter(dfSR, Tot<10000 & Tot>=1000))){
+         polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                 c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                 col="firebrick2", border="grey")
+       }
+  )
+  
+  with(filter(dfSR, Tot>=10000),
+       for (i in 1:nrow(filter(dfSR, Tot>=10000))){
+         polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                 c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                 col="firebrick4", border="grey")
+       }
+  )
+  
+  fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),refresh=TRUE,xlabs=T,ylabs=T)
+  
+  lines(Banana$Lon,Banana$Lat)
+  lines(Southern$Lon,Southern$Lat)
+  
+  legend(x="bottomright",
+         c("<100t","100t to 1000t","1000t to 10000t",">10000t"),
+         fill=c("antiquewhite","lightpink","firebrick2","firebrick4"),
+         border="black",
+         cex=2,
+         title = paste0(y))
+  
+  dev.off()
+  
 }
 
 #quarterly WG report maps
 #for (y in seq(2013,2016)){
 for (y in seq(2016,2016)){
   for (q in 1:4){
-
+    
     #1 quarterly plot per page
     #jpeg(filename=paste0(".\\Plots\\WGPlots\\CBySR",y,"_Q",q,".jpg"),
     #     width=1200, height=1600, quality=100)
-
+    
     jpeg(filename=paste0(".\\Plots\\WGPlots\\",y,"\\NEAFC_CBySR",y,"_Q",q,".jpg"),
          width=1200, height=1600, quality=100)
     
     dfSR <- fSubset(y = y, ptype = "Q", pnum = q)
-
+    
     blnxlabs <- c(T,T,T,T)
     blnylabs <- c(T,T,T,T)
     
     fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),xlabs=blnxlabs[q],ylabs=blnylabs[q])
-
+    
     with(filter(dfSR, Tot<100 & Tot>=1),
          for (i in 1:nrow(filter(dfSR, Tot<100))){
            polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
@@ -338,7 +419,7 @@ for (y in seq(2016,2016)){
            title = paste0("Q",q," ",y))
     
     dev.off()
-      
+    
   }
 }
 
@@ -347,8 +428,8 @@ for (y in seq(2016,2016)){
 #quarterly by country
 for (cry in c('IC','NO','DE','DK','BE','LT','ES','IE','PL','FO','BQ','NL','RU','SE','UKE','UKN','UKS','FR','GL','PT')) {
   #for (y in seq(2013,2016)){
-   for (y in seq(2016,2016)){
-     for (q in 1:4){
+  for (y in seq(2016,2016)){
+    for (q in 1:4){
       
       #1 quarterly plot per page
       #jpeg(filename=paste0(".\\Plots\\WGPlots\\",cry,"_CBySR",y,"_Q",q,".jpg"),
@@ -490,7 +571,7 @@ for (y in seq(2013,2016)){
 
 
 for (y in seq(1998,2015)) {
-
+  
   jpeg(filename=paste0(".\\Plots\\QCBySR",y,".jpg"),width=1200, height=1600, quality=100)
   
   #layout for 4 plots on 1 page
@@ -547,7 +628,7 @@ for (y in seq(1998,2015)) {
   }
   
   dev.off()
-
+  
   
   
   #monthly 
@@ -607,7 +688,7 @@ for (y in seq(1998,2015)) {
   }
   
   dev.off()
-    
+  
 }
 
 
@@ -616,7 +697,7 @@ for (y in seq(1998,2015)) {
 for (y in seq(2006,2015)) {
   
   jpeg(filename=paste0(".\\Plots\\MCBySR",y,"-",y+1,".jpg"),width=1600, height=1200, quality=100)
-
+  
   #layout for 6 plots on 1 page (landscape)
   layout(matrix(seq(1,6),nrow=2,ncol=3,byrow=TRUE))
   par(omi=c(1.0,1.0,1.0,1.0))
@@ -625,9 +706,9 @@ for (y in seq(2006,2015)) {
   
   blnxlabs <- c(F,F,F,T,T,T)
   blnylabs <- c(T,F,F,T,F,F)
-
+  
   for (q in c(10,11,12,1,2,3)) {
-
+    
     if (q>3){
       dfSR <- fSubset(y = y, ptype = "M", pnum = q, Cry = c("UKS","IE","DE","DK","NL"))      
     } else {
@@ -635,7 +716,7 @@ for (y in seq(2006,2015)) {
     }
     
     fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),xlabs=blnxlabs[q],ylabs=blnylabs[q])
-
+    
     with(filter(dfSR, Tot<100 & Tot>=1),
          for (i in 1:nrow(filter(dfSR, Tot<100))){
            polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
@@ -701,7 +782,7 @@ for (m in 1:12) {
   par(mar=c(0,0,0,0)+0.2)
   
   for (y in 2006:2015){
-  
+    
     dfSR <- fSubset(y = y, ptype = "M", pnum = m, Cry = c("UKS","IE","DE","DK","NL"))      
     
     #fPlotBaseMap(xlim=c(-20,8),ylim=c(44,64))
@@ -761,7 +842,7 @@ for (m in 1:12) {
   
   
   dev.off()
-
+  
 }
 
 
