@@ -59,7 +59,8 @@ processFile <- function(f,srcpath,tgtpath){
     if (nrow(dfMissing)>0) {
       if (!(nrow(dfMissing)==1 & toupper(dfMissing$RECT) %in% c("UKN","UNKNOWN","UNALLOCATED"))){
         cat(nrow(dfMissing)," SR missing from master list! (check dfMissing)\n")
-        browser()
+        cat(dfMissing$RECT,"\n")
+        #browser()
       }
     }
     
@@ -151,7 +152,7 @@ write(c("Ctry","Year","SR","Lat","Lon","PType","PNum","Catch"), file = ".\\Data\
 #year files
 yfiles <- list.files(path=".\\..\\Data\\",pattern="_Data")
 
-for (y in yfiles) {
+for (y in yfiles[30:30]) {
 
   if (file.exists(paste0(".\\..\\Data\\",y,"\\Finalxls\\Latest"))) {
     

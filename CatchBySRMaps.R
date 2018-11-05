@@ -17,6 +17,340 @@ source("SRAnalyFuncs.R")
 
 Months <- c("January","February","March","April","May","June","July","August","September","October","November","December")
 
+#11th October 2018
+#Irish catch by week (for Roisin Pinfield)
+
+for (y in seq(2017,2017)){
+  for (w in 1:52){
+    
+    dfSR <- fSubset(src = paste0(".\\Data\\CatchBySR_ByWeekNo_",y,".csv"), y = y, ptype = "W", pnum = w)
+
+    if (nrow(dfSR)>0){
+      
+      jpeg(filename=paste0(".\\Plots\\IEByWeek\\IE_",y,"_W",w,".jpg"),
+           width=1200, height=1600, quality=100)
+
+      fPlotBaseMap(xlim=c(-18,4),ylim=c(48,64),xlabs=T,ylabs=T)
+      
+      with(filter(dfSR, Tot<10 & Tot>=1),
+           for (i in 1:nrow(filter(dfSR, Tot<10))){
+             polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                     c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                     col="lightpink", border="grey")
+           }
+      )
+      
+      with(filter(dfSR, Tot<100 & Tot>=10),
+           for (i in 1:nrow(filter(dfSR, Tot<100 & Tot>=10))){
+             polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                     c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                     col="lightpink3", border="grey")
+           }
+      )
+      
+      with(filter(dfSR, Tot<1000 & Tot>=100),
+           for (i in 1:nrow(filter(dfSR, Tot<1000 & Tot>=100))){
+             polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                     c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                     col="firebrick2", border="grey")
+           }
+      )
+      
+      with(filter(dfSR, Tot>=1000),
+           for (i in 1:nrow(filter(dfSR, Tot>=1000))){
+             polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                     c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                     col="firebrick4", border="grey")
+           }
+      )
+      
+      fPlotBaseMap(xlim=c(-18,4),ylim=c(48,64),xlabs=T,ylabs=T,refresh=T)
+      
+      lines(Banana$Lon,Banana$Lat)
+      lines(Southern$Lon,Southern$Lat)
+      
+      legend(x="bottomright",
+             c("<10t","10t to 100t","100t to 1000t",">1000t"),
+             fill=c("antiquewhite","lightpink","firebrick2","firebrick4"),
+             border="black",
+             cex=2,
+             title = paste0(y," Week ",w))
+      
+      dev.off()
+      
+    } 
+    
+  }
+}
+
+
+
+#21st August 2018
+#WGWIDE2018 plots
+for (y in seq(2017,2017)){
+  
+  jpeg(filename=paste0(".\\Plots\\WGPlots\\",y,"\\NEAFC_CBySR",y,".jpg"),
+       width=1200, height=1600, quality=100)
+  
+  dfSR <- fSubset(y = y, ptype = "Y", pnum = y)
+  
+  fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),xlabs=T,ylabs=T)
+  
+  with(filter(dfSR, Tot<100 & Tot>=1),
+       for (i in 1:nrow(filter(dfSR, Tot<100))){
+         polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                 c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                 col="lightpink", border="grey")
+       }
+  )
+  
+  with(filter(dfSR, Tot<1000 & Tot>=100),
+       for (i in 1:nrow(filter(dfSR, Tot<1000 & Tot>=100))){
+         polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                 c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                 col="lightpink3", border="grey")
+       }
+  )
+  
+  with(filter(dfSR, Tot<10000 & Tot>=1000),
+       for (i in 1:nrow(filter(dfSR, Tot<10000 & Tot>=1000))){
+         polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                 c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                 col="firebrick2", border="grey")
+       }
+  )
+  
+  with(filter(dfSR, Tot>=10000),
+       for (i in 1:nrow(filter(dfSR, Tot>=10000))){
+         polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                 c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                 col="firebrick4", border="grey")
+       }
+  )
+  
+  fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),refresh=TRUE,xlabs=T,ylabs=T)
+  
+  lines(Banana$Lon,Banana$Lat)
+  lines(Southern$Lon,Southern$Lat)
+  
+  legend(x="bottomright",
+         c("<100t","100t to 1000t","1000t to 10000t",">10000t"),
+         fill=c("antiquewhite","lightpink","firebrick2","firebrick4"),
+         border="black",
+         cex=2,
+         title = paste0(y))
+  
+  dev.off()
+  
+}
+
+#quarterly WG report maps
+for (y in seq(2017,2017)){
+  for (q in 1:4){
+    
+    #1 quarterly plot per page
+    #jpeg(filename=paste0(".\\Plots\\WGPlots\\CBySR",y,"_Q",q,".jpg"),
+    #     width=1200, height=1600, quality=100)
+    
+    jpeg(filename=paste0(".\\Plots\\WGPlots\\",y,"\\NEAFC_CBySR",y,"_Q",q,".jpg"),
+         width=1200, height=1600, quality=100)
+    
+    dfSR <- fSubset(y = y, ptype = "Q", pnum = q)
+    
+    blnxlabs <- c(T,T,T,T)
+    blnylabs <- c(T,T,T,T)
+    
+    fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),xlabs=blnxlabs[q],ylabs=blnylabs[q])
+    
+    with(filter(dfSR, Tot<100 & Tot>=1),
+         for (i in 1:nrow(filter(dfSR, Tot<100))){
+           polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                   c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                   col="lightpink", border="grey")
+         }
+    )
+    
+    with(filter(dfSR, Tot<1000 & Tot>=100),
+         for (i in 1:nrow(filter(dfSR, Tot<1000 & Tot>=100))){
+           polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                   c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                   col="lightpink3", border="grey")
+         }
+    )
+    
+    with(filter(dfSR, Tot<10000 & Tot>=1000),
+         for (i in 1:nrow(filter(dfSR, Tot<10000 & Tot>=1000))){
+           polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                   c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                   col="firebrick2", border="grey")
+         }
+    )
+    
+    with(filter(dfSR, Tot>=10000),
+         for (i in 1:nrow(filter(dfSR, Tot>=10000))){
+           polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                   c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                   col="firebrick4", border="grey")
+         }
+    )
+    
+    fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),refresh=TRUE,xlabs=blnxlabs[q],ylabs=blnylabs[q])
+    
+    lines(Banana$Lon,Banana$Lat)
+    lines(Southern$Lon,Southern$Lat)
+    
+    legend(x="bottomright",
+           c("<100t","100t to 1000t","1000t to 10000t",">10000t"),
+           fill=c("antiquewhite","lightpink","firebrick2","firebrick4"),
+           border="black",
+           cex=2,
+           title = paste0("Q",q," ",y))
+    
+    dev.off()
+    
+  }
+}
+
+
+#quarterly by country
+for (cry in c('IC','NO','DE','DK','BE','ES','IE','PL','FO','BQ','NL','RU','SE','UKE','UKN','UKS','FR','GL','PT')) {
+  for (y in seq(2017,2017)){
+    for (q in 1:4){
+      
+      #1 quarterly plot per page
+      #jpeg(filename=paste0(".\\Plots\\WGPlots\\",cry,"_CBySR",y,"_Q",q,".jpg"),
+      #     width=1200, height=1600, quality=100)
+      
+      jpeg(filename=paste0(".\\Plots\\WGPlots\\",y,"\\",cry,"_NEAFC_CBySR",y,"_Q",q,".jpg"),
+           width=1200, height=1600, quality=100)
+      
+      dfSR <- fSubset(y = y, ptype = "Q", pnum = q, Cry = cry)
+      
+      blnxlabs <- c(T,T,T,T)
+      blnylabs <- c(T,T,T,T)
+      
+      fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),xlabs=blnxlabs[q],ylabs=blnylabs[q])
+      
+      with(filter(dfSR, Tot<100 & Tot>=1),
+           for (i in 1:nrow(filter(dfSR, Tot<100))){
+             polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                     c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                     col="lightpink", border="grey")
+           }
+      )
+      
+      with(filter(dfSR, Tot<1000 & Tot>=100),
+           for (i in 1:nrow(filter(dfSR, Tot<1000 & Tot>=100))){
+             polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                     c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                     col="lightpink3", border="grey")
+           }
+      )
+      
+      with(filter(dfSR, Tot<10000 & Tot>=1000),
+           for (i in 1:nrow(filter(dfSR, Tot<10000 & Tot>=1000))){
+             polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                     c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                     col="firebrick2", border="grey")
+           }
+      )
+      
+      with(filter(dfSR, Tot>=10000),
+           for (i in 1:nrow(filter(dfSR, Tot>=10000))){
+             polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                     c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                     col="firebrick4", border="grey")
+           }
+      )
+      
+      fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),refresh=TRUE,xlabs=blnxlabs[q],ylabs=blnylabs[q])
+      
+      lines(Banana$Lon,Banana$Lat)
+      lines(Southern$Lon,Southern$Lat)
+      
+      legend(x="bottomright",
+             c("<100t","100t to 1000t","1000t to 10000t",">10000t"),
+             fill=c("antiquewhite","lightpink","firebrick2","firebrick4"),
+             border="black",
+             cex=2,
+             title = paste(cry," Q",q," ",y,sep=""))
+      
+      dev.off()
+      
+    }
+  }
+}
+
+
+#monthly
+for (y in seq(2017,2017)){
+  for (m in 1:12){
+    
+    #1 plot per page
+    #jpeg(filename=paste0(".\\Plots\\WGPlots\\CBySR",y,"_M",m,".jpg"),
+    #     width=1200, height=1600, quality=100)
+    
+    jpeg(filename=paste0(".\\Plots\\WGPlots\\",y,"\\NEAFC_CBySR",y,"_M",m,".jpg"),
+         width=1200, height=1600, quality=100)
+    
+    dfSR <- fSubset(y = y, ptype = "M", pnum = m)
+    
+    blnxlabs <- c(T,T,T,T,T,T,T,T,T,T,T,T)
+    blnylabs <- c(T,T,T,T,T,T,T,T,T,T,T,T)
+    
+    fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),xlabs=blnxlabs[m],ylabs=blnylabs[m])
+    
+    with(filter(dfSR, Tot<100 & Tot>=1),
+         for (i in 1:nrow(filter(dfSR, Tot<100))){
+           polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                   c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                   col="lightpink", border="grey")
+         }
+    )
+    
+    with(filter(dfSR, Tot<1000 & Tot>=100),
+         for (i in 1:nrow(filter(dfSR, Tot<1000 & Tot>=100))){
+           polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                   c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                   col="lightpink3", border="grey")
+         }
+    )
+    
+    with(filter(dfSR, Tot<10000 & Tot>=1000),
+         for (i in 1:nrow(filter(dfSR, Tot<10000 & Tot>=1000))){
+           polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                   c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                   col="firebrick2", border="grey")
+         }
+    )
+    
+    with(filter(dfSR, Tot>=10000),
+         for (i in 1:nrow(filter(dfSR, Tot>=10000))){
+           polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                   c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                   col="firebrick4", border="grey")
+         }
+    )
+    
+    fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),refresh=TRUE,xlabs=blnxlabs[m],ylabs=blnylabs[m])
+    
+    lines(Banana$Lon,Banana$Lat)
+    lines(Southern$Lon,Southern$Lat)
+    
+    legend(x="bottomright",
+           c("<100t","100t to 1000t","1000t to 10000t",">10000t"),
+           fill=c("antiquewhite","lightpink","firebrick2","firebrick4"),
+           border="black",
+           cex=2,
+           title = paste("M",m,y,sep=" "))
+    
+    dev.off()
+    
+  }
+}
+
+############END WGWIDE 2018######################################
+
 
 #18/10/2017 Plots for species summary pages in 2017 Stockbook
 #Mackerel

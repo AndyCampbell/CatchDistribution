@@ -161,14 +161,14 @@ fSubset <- function(src = ".\\Data\\WGCatchBySR.csv", y, ptype, pnum, Cry){
     if (!(missing(pnum))){
       df <- df %>%
         filter(Year %in% pnum) %>%
-        group_by(Year,SR) %>%
+        group_by(Year,SR,Lat,Lon) %>%
         summarise(Tot=sum(Catch)) %>%
-        select(Year,SR,Tot)
+        select(Year,SR,Lat,Lon,Tot)
     } else {
       df <- df %>%
-        group_by(Year,SR) %>%
+        group_by(Year,SR,Lat,Lon) %>%
         summarise(SubTot=sum(Catch)) %>%
-        group_by(SR) %>%
+        group_by(SR,Lat,Lon) %>%
         summarise(Tot=sum(SubTot),Avg=sum(SubTot)/length(y))
     }
     
@@ -197,6 +197,14 @@ fSubset <- function(src = ".\\Data\\WGCatchBySR.csv", y, ptype, pnum, Cry){
     
     names(dfQ) <- names(dfM)
     df <- bind_rows(dfM,dfQ)
+
+    #data frame to return
+    df <- select(group_by(df,Year,SR,Lat,Lon),Year,SR,Lat,Lon,Catch) %>% summarise(Tot=sum(Catch))
+  
+  } else if (toupper(ptype) == "W") {     #weekly
+
+    #weekly
+    df <- filter(df, PType=="W" & PNum==pnum)
 
     #data frame to return
     df <- select(group_by(df,Year,SR,Lat,Lon),Year,SR,Lat,Lon,Catch) %>% summarise(Tot=sum(Catch))
