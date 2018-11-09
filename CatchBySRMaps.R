@@ -3,6 +3,12 @@
 #read in raw data, should be in the Data directory and in a file called WGCatchBySR.csv
 #it's generated from the exchange sheets by script ExtractCatchBySR.R
 
+#Change Log
+#21/08/2018 - WGWIDE 2018 maps
+#11/10/2018 - Irish mackerel catch by week (for Roisin Pinfield)
+#05/11/2018 - 2018 Stockbook maps
+
+
 rm(list=ls())
 gc()
 
@@ -352,15 +358,23 @@ for (y in seq(2017,2017)){
 ############END WGWIDE 2018######################################
 
 
+
+##############################Stockbook#######################################################################
+#05/11/2018 Updated for 2018 Stockbook
 #18/10/2017 Plots for species summary pages in 2017 Stockbook
+
 #Mackerel
 #plot of catch distribution for entire year for 1) all nations 2) Ireland only
 #no legend, no grid lines, no axis notations
 
-jpeg(filename = ".\\Plots\\Stockbooks\\2017\\Total2016_MAC_CBySR.jpg",
-     width=1200, height=1600, quality=100)
 
-dfSR <- fSubset(y = 2016, ptype = "Y", pnum = y)
+#data year, reporting year
+data.y <- 2017; rep.y <- 2018
+
+#jpeg(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\Total",data.y,"_MAC_CBySR.jpg"),width=1200, height=1600, quality=100)
+png(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\Total",data.y,"_MAC_CBySR.png"),width=1200, height=1600)
+
+dfSR <- fSubset(y = data.y, ptype = "Y", pnum = data.y)
 
 fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
 
@@ -402,10 +416,10 @@ dev.off()
 
 #Irish only
 
-jpeg(filename = ".\\Plots\\Stockbooks\\2017\\IE2016_MAC_CBySR.jpg",
-     width=1200, height=1600, quality=100)
+#jpeg(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\IE",data.y,"_MAC_CBySR.jpg"),width=1200, height=1600, quality=100)
+png(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\IE",data.y,"_MAC_CBySR.png"),width=1200, height=1600)
 
-dfSR <- fSubset(y = 2016, ptype = "Y", pnum = y, Cry = 'IE')
+dfSR <- fSubset(y = data.y, ptype = "Y", pnum = data.y, Cry = 'IE')
 
 fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
 
@@ -450,10 +464,9 @@ dev.off()
 
 for (m in 1:12){
   
-  jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\2016_MAC_CBySR_M",m,".jpg"),
-       width=1200, height=1600, quality=100)
+  jpeg(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\",data.y,"_MAC_CBySR_M",m,".jpg"),width=1200, height=1600, quality=100)
   
-  dfSR <- fSubset(y = 2016, ptype = "M", pnum = m)
+  dfSR <- fSubset(y = data.y, ptype = "M", pnum = m)
   
   blnxlabs <- c(F,F,F,F,F,F,F,F,F,F,F,F)
   blnylabs <- c(F,F,F,F,F,F,F,F,F,F,F,F)
@@ -501,6 +514,7 @@ for (m in 1:12){
   dev.off()
   
 }
+
 
 
 #Boarfish
@@ -567,13 +581,16 @@ dev.off()
 
 
 #horse mackerel
-y <- 2016
 
-jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\WG",y,"_HOM_CBySR.jpg"),
-     width=1200, height=1600, quality=100)
+#y <- 2016
+#jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\WG",y,"_HOM_CBySR.jpg"),width=1200, height=1600, quality=100)
+
+y <- 2017
+#jpeg(filename = paste0(".\\Plots\\Stockbooks\\2018\\WG",y,"_HOM_CBySR.jpg"),width=1200, height=1600, quality=100)
+png(filename = paste0(".\\Plots\\Stockbooks\\2018\\WG",y,"_HOM_CBySR.png"),width=1200, height=1600)
 
 #basebap
-fPlotBaseMap(xlim=c(-15,10),ylim=c(36,66),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
 
 #annual data
 dfSub <- fSubset(src = ".\\Data\\hom.27WGCatchBySR.csv",y = y, ptype = "Y", pnum = y)
@@ -586,7 +603,7 @@ fPlotDist(dfSub,min=10,max=100,fill.col="lightpink3",border.col="lightpink3")
 fPlotDist(dfSub,min=100,max=1000,fill.col="firebrick2",border.col="firebrick2")
 fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
 
-fPlotBaseMap(xlim=c(-15,10),ylim=c(36,66),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
 
 legend(x = "bottomright",
        legend = c("<1t","1t to 10t","10t to 100t","100t to 1000t",">1000t"),
@@ -597,14 +614,18 @@ legend(x = "bottomright",
 
 dev.off()
 
-#Irish catch
-y <- 2016
 
-jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\IE",y,"_HOM_CBySR.jpg"),
-     width=1200, height=1600, quality=100)
+#Irish catch
+#y <- 2016
+#jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\IE",y,"_HOM_CBySR.jpg"),width=1200, height=1600, quality=100)
+
+y <- 2017
+
+#jpeg(filename = paste0(".\\Plots\\Stockbooks\\2018\\IE",y,"_HOM_CBySR.jpg"), width=1200, height=1600, quality=100)
+png(filename = paste0(".\\Plots\\Stockbooks\\2018\\IE",y,"_HOM_CBySR.png"),width=1200, height=1600)
 
 #basebap
-fPlotBaseMap(xlim=c(-15,10),ylim=c(36,66),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
 
 #annual data
 dfSub <- fSubset(src = ".\\Data\\hom.27WGCatchBySR.csv",y = y, ptype = "Y", pnum = y, Cry='IE')
@@ -617,7 +638,7 @@ fPlotDist(dfSub,min=10,max=100,fill.col="lightpink3",border.col="lightpink3")
 fPlotDist(dfSub,min=100,max=1000,fill.col="firebrick2",border.col="firebrick2")
 fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
 
-fPlotBaseMap(xlim=c(-15,10),ylim=c(36,66),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
 
 legend(x = "bottomright",
        legend = c("<1t","1t to 10t","10t to 100t","100t to 1000t",">1000t"),
@@ -627,6 +648,69 @@ legend(x = "bottomright",
        title = paste0("Catch ",y))
 
 dev.off()
+
+
+#Blue Whiting - all fleets
+y <- 2017
+png(filename = paste0(".\\Plots\\Stockbooks\\2018\\WG",y,"_WHB_CBySR.png"),width=1200, height=1600)
+
+#basebap
+fPlotBaseMap(xlim=c(-17,10),ylim=c(37,70),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+#annual data
+dfSub <- fSubset(src = ".\\Data\\whb.27.1-91214WGCatchBySR.csv",y = y, ptype = "Y", pnum = y)
+
+range(dfSub$Tot)
+
+fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+fPlotDist(dfSub,min=1,max=100,fill.col="lightpink",border.col="lightpink")
+fPlotDist(dfSub,min=100,max=1000,fill.col="lightpink3",border.col="lightpink3")
+fPlotDist(dfSub,min=1000,max=15000,fill.col="firebrick2",border.col="firebrick2")
+fPlotDist(dfSub,min=15000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+
+fPlotBaseMap(xlim=c(-17,10),ylim=c(37,70),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<1t","1t to 100t","100t to 1000t","1000t to 15000t",">15000t"),
+       fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("Catch ",y))
+
+dev.off()
+
+
+#Blue Whiting - Ireland
+y <- 2017
+png(filename = paste0(".\\Plots\\Stockbooks\\2018\\IE",y,"_WHB_CBySR.png"),width=1200, height=1600)
+
+#basebap
+fPlotBaseMap(xlim=c(-17,10),ylim=c(37,70),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+#annual data
+dfSub <- fSubset(src = ".\\Data\\whb.27.1-91214WGCatchBySR.csv",y = y, ptype = "Y", pnum = y, Cry="IE")
+
+range(dfSub$Tot)
+
+fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+fPlotDist(dfSub,min=1,max=100,fill.col="lightpink",border.col="lightpink")
+fPlotDist(dfSub,min=100,max=1000,fill.col="lightpink3",border.col="lightpink3")
+fPlotDist(dfSub,min=1000,max=15000,fill.col="firebrick2",border.col="firebrick2")
+fPlotDist(dfSub,min=15000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+
+fPlotBaseMap(xlim=c(-17,10),ylim=c(37,70),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<1t","1t to 100t","100t to 1000t","1000t to 15000t",">15000t"),
+       fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("Catch ",y))
+
+dev.off()
+
+
+
 
 #############################################################################################################
 #31/08/2017 WGWIDE 2017 
