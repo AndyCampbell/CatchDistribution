@@ -7,6 +7,7 @@
 #21/08/2018 - WGWIDE 2018 maps
 #11/10/2018 - Irish mackerel catch by week (for Roisin Pinfield)
 #05/11/2018 - 2018 Stockbook maps
+#20/11/2018 - BW maps by country (for BIM report)
 
 
 rm(list=ls())
@@ -690,34 +691,40 @@ legend(x = "bottomright",
 dev.off()
 
 
-#Blue Whiting - Ireland
+#Blue Whiting - by country
+crys <- c("DK","FO","FR","DE","IE","IC","LT","NL","NO","PT","RU","UKS","SE","ES","UKE")
 y <- 2017
-png(filename = paste0(".\\Plots\\Stockbooks\\2018\\IE",y,"_WHB_CBySR.png"),width=1200, height=1600)
 
-#basebap
-fPlotBaseMap(xlim=c(-17,10),ylim=c(37,70),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+for (c in crys) {
 
-#annual data
-dfSub <- fSubset(src = ".\\Data\\whb.27.1-91214WGCatchBySR.csv",y = y, ptype = "Y", pnum = y, Cry="IE")
+  png(filename = paste0(".\\Plots\\Stockbooks\\2018\\",c,y,"_WHB_CBySR.png"),width=1200, height=1600)
 
-range(dfSub$Tot)
+  #basebap
+  fPlotBaseMap(xlim=c(-17,10),ylim=c(37,70),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
 
-fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
-fPlotDist(dfSub,min=1,max=100,fill.col="lightpink",border.col="lightpink")
-fPlotDist(dfSub,min=100,max=1000,fill.col="lightpink3",border.col="lightpink3")
-fPlotDist(dfSub,min=1000,max=15000,fill.col="firebrick2",border.col="firebrick2")
-fPlotDist(dfSub,min=15000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+  #annual data
+  dfSub <- fSubset(src = ".\\Data\\whb.27.1-91214WGCatchBySR.csv",y = y, ptype = "Y", pnum = y, Cry=c)
 
-fPlotBaseMap(xlim=c(-17,10),ylim=c(37,70),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+  range(dfSub$Tot)
 
-legend(x = "bottomright",
-       legend = c("<1t","1t to 100t","100t to 1000t","1000t to 15000t",">15000t"),
-       fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
-       border = "black",
-       cex = 4,
-       title = paste0("Catch ",y))
+  fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+  fPlotDist(dfSub,min=1,max=100,fill.col="lightpink",border.col="lightpink")
+  fPlotDist(dfSub,min=100,max=1000,fill.col="lightpink3",border.col="lightpink3")
+  fPlotDist(dfSub,min=1000,max=15000,fill.col="firebrick2",border.col="firebrick2")
+  fPlotDist(dfSub,min=15000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
 
-dev.off()
+  fPlotBaseMap(xlim=c(-17,10),ylim=c(37,70),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+  legend(x = "bottomright",
+         legend = c("<1t","1t to 100t","100t to 1000t","1000t to 15000t",">15000t"),
+         fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+         border = "black",
+         cex = 4,
+         title = paste0(c," Catch ",y))
+
+  dev.off()
+  
+}
 
 
 
