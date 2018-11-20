@@ -520,10 +520,11 @@ for (m in 1:12){
 #Boarfish
 
 #annual
-for (y in seq(2007,2016)) {
-  
-  jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\IE",y,"_BOC_CBySR.jpg"),
-       width=1200, height=1600, quality=100)
+#for (y in seq(2007,2016)) {
+for (y in seq(2007,2017)) {
+    
+  #jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\IE",y,"_BOC_CBySR.jpg"),width=1200, height=1600, quality=100)
+  png(filename = paste0(".\\Plots\\Stockbooks\\",2018,"\\IE",data.y,"_BOC_CBySR.png"),width=1200, height=1600)
   
   #basebap
   fPlotBaseMap(xlim=c(-17,5),ylim=c(40,62),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
@@ -551,14 +552,17 @@ for (y in seq(2007,2016)) {
 }
 
 #mean 2007-2015
-jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\IE_2007_2015_BOC_CBySR.jpg"),
-     width=1200, height=1600, quality=100)
+#jpeg(filename = paste0(".\\Plots\\Stockbooks\\2017\\IE_2007_2015_BOC_CBySR.jpg"),
+#     width=1200, height=1600, quality=100)
+#mean 2007-2016
+png(filename = paste0(".\\Plots\\Stockbooks\\",2018,"\\IE_2007_2016_BOC_CBySR.png"),width=1200, height=1600)
 
 #basebap
 fPlotBaseMap(xlim=c(-17,5),ylim=c(40,62),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
 
 #annual data
-dfSub <- fSubset(src = ".\\Data\\boc.27.6-8WGCatchBySR.csv",y = seq(2007,2015), ptype = "Y")
+#dfSub <- fSubset(src = ".\\Data\\boc.27.6-8WGCatchBySR.csv",y = seq(2007,2015), ptype = "Y")
+dfSub <- fSubset(src = ".\\Data\\boc.27.6-8WGCatchBySR.csv",y = seq(2007,2016), ptype = "Y")
 
 range(dfSub$Tot)
 range(dfSub$Avg)
@@ -570,12 +574,18 @@ fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4",
 
 fPlotBaseMap(xlim=c(-17,5),ylim=c(40,62),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
 
+# legend(x = "bottomright",
+#        legend = c("<10t","10t to 100t","100t to 1000t",">1000t"),
+#        fill = c("lightpink","lightpink3","firebrick2","firebrick4"),
+#        border = "black",
+#        cex = 4,
+#        title = "Average catch, 2007-2015")
 legend(x = "bottomright",
        legend = c("<10t","10t to 100t","100t to 1000t",">1000t"),
        fill = c("lightpink","lightpink3","firebrick2","firebrick4"),
        border = "black",
        cex = 4,
-       title = "Average catch, 2007-2015")
+       title = "Average catch, 2007-2016")
 
 dev.off()
 
