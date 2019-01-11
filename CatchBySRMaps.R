@@ -4,6 +4,7 @@
 #it's generated from the exchange sheets by script ExtractCatchBySR.R
 
 #Change Log
+#08/01/2019 - WKIBPNEAMac maps
 #21/08/2018 - WGWIDE 2018 maps
 #11/10/2018 - Irish mackerel catch by week (for Roisin Pinfield)
 #05/11/2018 - 2018 Stockbook maps
@@ -14,15 +15,108 @@ rm(list=ls())
 gc()
 
 library(dplyr)
+library(geosphere)
 
 load(".//..//Data//RData//coast.rda")
 load(".//..//Data//RData//NEAFC.rda")
 load(".//..//Data//RData//SR.rda")
-SR$SR <- levels(SR$Rect)[SR$Rect]     #SR as a character
+dfSR$SR <- levels(dfSR$Rect)[dfSR$Rect]     #SR as a character
 
 source("SRAnalyFuncs.R")
 
 Months <- c("January","February","March","April","May","June","July","August","September","October","November","December")
+Months.Abbrev <- c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+
+#9th January - WKIBPNEAMac
+#Catch by SR by Month by Country
+
+#for (cry in c('IC','NO','DK','FO','UKS','IE')) {
+for (cry in c('UKS')) {
+  
+  for (y in seq(2017,2017)){
+    
+    for (m in 1:12){
+  
+      #Iceland
+      xlim <- c(-36,12);ylim <- c(50,70)
+      #Scotland
+      if (cry=='UKS'){
+        xlim <- c(-16,8);ylim <- c(50,66)
+      }
+      
+      
+      lon.dist <- geosphere::distGeo(p1=c(min(xlim),mean(ylim)),p2=c(max(xlim),mean(ylim)))
+      lat.dist <- geosphere::distGeo(p1=c(mean(xlim),min(ylim)),p2=c(mean(xlim),max(ylim)))
+      aspect <- lon.dist/lat.dist
+
+      dfSR <- fSubset(y = y, ptype = "M", pnum = m, Cry=cry)
+
+      if (nrow(dfSR)>0) {
+        
+        jpeg(filename=paste0(".\\Plots\\WKIBPNEAMac\\",y,"\\",cry,"\\",y,"_",Months.Abbrev[m],"_",cry,"_CBySR.jpg"),
+             width=1500, height=1500/aspect, quality=100)
+        
+        #axes labels?
+        #blnxlabs <- c(T,T,T,T,T,T,T,T,T,T,T,T)
+        #blnylabs <- c(T,T,T,T,T,T,T,T,T,T,T,T)
+        blnxlabs <- blnylabs <- rep(F,12)
+        
+        fPlotBaseMap(xlim=xlim,ylim=ylim,xlabs=blnxlabs[m],ylabs=blnylabs[m],xaxis=FALSE,yaxis=FALSE,ICES=FALSE)
+        
+        with(filter(dfSR, Tot<100 & Tot>=1),
+             for (i in 1:nrow(filter(dfSR, Tot<100))){
+               polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                       c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                       col="lightpink", border="grey")
+             }
+        )
+        
+        with(filter(dfSR, Tot<1000 & Tot>=100),
+             for (i in 1:nrow(filter(dfSR, Tot<1000 & Tot>=100))){
+               polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                       c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                       col="lightpink3", border="grey")
+             }
+        )
+        
+        with(filter(dfSR, Tot<3000 & Tot>=1000),
+             for (i in 1:nrow(filter(dfSR, Tot<3000 & Tot>=1000))){
+               polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                       c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                       col="firebrick2", border="grey")
+             }
+        )
+        
+        with(filter(dfSR, Tot>=3000),
+             for (i in 1:nrow(filter(dfSR, Tot>=3000))){
+               polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+                       c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+                       col="firebrick4", border="grey")
+             }
+        )
+        
+        fPlotBaseMap(xlim=xlim,ylim=ylim,refresh=TRUE,xlabs=blnxlabs[m],ylabs=blnylabs[m],xaxis=FALSE,yaxis=FALSE,ICES=FALSE)
+        
+        #lines(Banana$Lon,Banana$Lat)
+        #lines(Southern$Lon,Southern$Lat)
+        
+        #no legend required
+        legend(x="bottomright",
+               c("<100t","100t to 1000t","1000t to 3000t",">3000t"),
+               fill=c("lightpink","lightpink3","firebrick2","firebrick4"),
+               border="black",
+               cex=3)
+        
+        dev.off()
+      
+      }
+      
+    } #month loop
+  } #year loop
+} #country loop
+
+#end WKIBPNEAMac
+
 
 #11th October 2018
 #Irish catch by week (for Roisin Pinfield)

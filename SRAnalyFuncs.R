@@ -176,7 +176,7 @@ fSubset <- function(src = ".\\Data\\WGCatchBySR.csv", y, ptype, pnum, Cry){
   } else if (toupper(ptype) == "Q") {
     #quarterly
 
-    df <- filter(df, (PType=="Q" & PNum==pnum) | (PType=="M" & PNum %in% unlist(months[paste0('Q',pnum)])))
+    df <- filter(df, (PType=="Q" & PNum %in% pnum) | (PType=="M" & PNum %in% unlist(months[paste0('Q',pnum)])))
 
     #data frame to return
     df <- select(group_by(df,Year,SR,Lat,Lon),Year,SR,Lat,Lon,Catch) %>% summarise(Tot=sum(Catch))
@@ -184,10 +184,10 @@ fSubset <- function(src = ".\\Data\\WGCatchBySR.csv", y, ptype, pnum, Cry){
   } else if (toupper(ptype) == "M") {     #monthly
     
     #monthly data
-    dfM <- filter(df, PType=="M" & PNum==pnum)
+    dfM <- filter(df, PType=="M" & PNum %in% pnum)
     #cat(nrow(dfM),"monthly records\n")
     #quarterly data 
-    dfQ <- filter(df, PType=="Q" & PNum==quarters[pnum])
+    dfQ <- filter(df, PType=="Q" & PNum %in% quarters[pnum])
     #cat(nrow(dfQ),"quarterly records\n")
     
     #divide catch by 3

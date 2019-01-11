@@ -152,12 +152,17 @@ write(c("Ctry","Year","SR","Lat","Lon","PType","PNum","Catch"), file = ".\\Data\
 #year files
 yfiles <- list.files(path=".\\..\\Data\\",pattern="_Data")
 
-for (y in yfiles[30:30]) {
-
+for (y in yfiles) {
+    
+  cat(y,"\n")
+  
   if (file.exists(paste0(".\\..\\Data\\",y,"\\Finalxls\\Latest"))) {
     
     #list of data files
     dfiles <- list.files(path=paste0(".\\..\\Data\\",y,"\\Finalxls\\Latest"),pattern=".xlsx")
+    #browser()
+    #ignore temp files (those starting with ~)
+    if (any(grep(pattern="~",dfiles))) dfiles <- dfiles[-grep(pattern="~",dfiles)]
 
     if (length(dfiles)>0) {
       lapply(dfiles,processFile,

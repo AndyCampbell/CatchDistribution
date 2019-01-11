@@ -1,0 +1,20 @@
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(lubridate)
+library(jpeg)
+library(grid)
+
+graphics.dir <- file.path(getwd(),'Plots','WKIBPNEAMac')
+p1 <- jpeg::readJPEG(file.path(graphics.dir,'2017_Apr_DK_CBySR.jpg'))
+p2 <- jpeg::readJPEG(file.path(graphics.dir,'2017_Apr_FO_CBySR.jpg'))
+p3 <- jpeg::readJPEG(file.path(graphics.dir,'2017_Apr_UKS_CBySR.jpg'))
+p4 <- jpeg::readJPEG(file.path(graphics.dir,'2017_Apr_IC_CBySR.jpg'))
+g1 <- rasterGrob(p1)
+g2 <- rasterGrob(p2)
+g3 <- rasterGrob(p3)
+g4 <- rasterGrob(p4)
+
+pall <- ggarrange(g1,g2,g3,g4,nrow=2,ncol=2)  
+  
+ggexport(pall, filename="pAll.pdf")

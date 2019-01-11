@@ -1,0 +1,36 @@
+---
+title: "WKIBPNEAMac"
+author: "Andrew Campbell"
+date: "9 January 2019"
+output: pdf_document
+classoption: landscape
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(lubridate)
+library(jpeg)
+library(grid)
+Drive <- "H:"
+Catch.Dir <- file.path(Drive,"Stocks","mac.27.nea","StockCoordination","CatchDistribution","Plots","WKIBPNEAMac")
+Screened.Dir <- file.path(Drive,"Stocks","mac.27.nea","DataAnalysis","RFID","Plots")
+```
+
+## Catch By Stat Rectangle
+
+This is an R Markdown document. 
+
+\newpage
+
+```{r dist1, echo=FALSE}
+p1 <- jpeg::readJPEG(file.path(Catch.Dir,'2017','UKS','2017_Jan_UKS_CBySR.jpg'))
+p2 <- jpeg::readJPEG(file.path(Screened.Dir,'2017','UK','2017_Jan_UK_ScreenedCatch.jpg'))
+g1 <- rasterGrob(p1,height = unit(10,"cm"))
+g2 <- rasterGrob(p2,height = unit(10,"cm"))
+
+ggarrange(g1,g2,nrow=1,ncol=2) 
+```
+
