@@ -8,6 +8,8 @@ FO*.tex
 NO*.tex
 IC*.tex
 UKS*.tex
+IE*.tex
+DK*.tex
 *.aux
 *.bbl
 *.*~

@@ -134,13 +134,13 @@ table(dfScannedCatch$Ctry)
 #all catch by SR data
 dfCatchBySR <- read.table(file = ".\\Data\\WGCatchBySR.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
 #select countries, years 
-dfCatchBySR <- dplyr::filter(dfCatchBySR, Ctry %in% c('FO','IC','NO','UKS') & Year>=2012 & Year<=2017)
+dfCatchBySR <- dplyr::filter(dfCatchBySR, Ctry %in% c('FO','IC','NO','UKS','IE','DK') & Year>=2012 & Year<=2017)
 #all RFID data
-dfRFID <- dplyr::filter(dfScannedCatch, Ctry %in% c('FO','IC','NO','UKS') & Year>=2012 & Year<=2017)
+dfRFID <- dplyr::filter(dfScannedCatch, Ctry %in% c('FO','IC','NO','UKS','IE','DK') & Year>=2012 & Year<=2017)
 
 #generate the plots
 #for (cry in c('IC','FO','NO','IC','UKS')) {
-for (cry in c('UKS')) {
+for (cry in c('DK')) {
 
   #country annual totals
   dfCountryCatch <- dfCatchBySR %>%
@@ -198,6 +198,8 @@ for (cry in c('UKS')) {
 
       #Scotland
       if (cry=='UKS'){xlim <- c(-16,8);ylim <- c(50,66)}
+      if (cry=='DK'){xlim <- c(-16,8);ylim <- c(50,66)}
+      if (cry=='IE'){xlim <- c(-16,8);ylim <- c(50,66)}
       if (cry=='FO'){xlim <- c(-16,8);ylim <- c(54,70)}
       if (cry=='NO'){xlim <- c(-12,12);ylim <- c(54,70)}
       if (cry=='IC'){xlim <- c(-26,12);ylim <- c(60,68)}
@@ -331,8 +333,8 @@ for (cry in c('UKS')) {
     } #end month
 
     #output pdf
-    ggexport(Plot1,Plot2,Plot3,Plot4,Plot5,Plot6,Plot7,Plot8,Plot9,Plot10,Plot11,Plot12,
-             filename=file.path(".","Plots","WKIBPNEAMac",paste0(cry,"_",y,".pdf")))
+    #ggexport(Plot1,Plot2,Plot3,Plot4,Plot5,Plot6,Plot7,Plot8,Plot9,Plot10,Plot11,Plot12,
+    #         filename=file.path(".","Plots","WKIBPNEAMac",paste0(cry,"_",y,".pdf")))
     
     #remove plot objects
     rm("Plot1","Plot2","Plot3","Plot4","Plot5","Plot6","Plot7","Plot8","Plot9","Plot10","Plot11","Plot12")
