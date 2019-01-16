@@ -4,6 +4,7 @@
 #it's generated from the exchange sheets by script ExtractCatchBySR.R
 
 #Change Log
+#15/01/2019 - WKIBPNEAMac ggplot maps
 #08/01/2019 - WKIBPNEAMac maps
 #21/08/2018 - WGWIDE 2018 maps
 #11/10/2018 - Irish mackerel catch by week (for Roisin Pinfield)
@@ -16,6 +17,18 @@ gc()
 
 library(dplyr)
 library(geosphere)
+library(rgdal)
+library(gpclib)
+library(maptools)
+library(rgeos)
+library(ggplot2)
+library(RColorBrewer)
+library(reshape)
+library(dplyr)
+library(ggpubr)     #arranging ggplots on a grid
+library(xtable)     #latex tables
+
+gpclibPermit()
 
 load(".//..//Data//RData//coast.rda")
 load(".//..//Data//RData//NEAFC.rda")
@@ -26,6 +39,312 @@ source("SRAnalyFuncs.R")
 
 Months <- c("January","February","March","April","May","June","July","August","September","October","November","December")
 Months.Abbrev <- c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+Four.Colours <- c("lightpink", "lightpink3", "firebrick2","firebrick4")
+Catch.Bins <- c("1t-100t","100t-1000t","1000t-3000t",">3000t")
+Scanned.Bins <- c("1t-100t","100t-1000t","1000t-3000t",">3000t")
+Catch.Limits <- c(1,100,1000,3000)
+Scanned.Limits <- c(1,100,1000,3000)
+
+#15th January - WKIBPNEAMac
+#migrating to ggplot maps and including plot of catches scanned for tags and tag return numbers
+
+eco <- subset(read.csv(file=file.path(".","..","Data","RData","iarc.eco.2008.csv"), header = TRUE, sep=","), iso2 != "EU27")
+map <- readShapeSpatial(fn=file.path(".","..","Data","maps","countries//CNTR_RG_60M_2006"), proj4string = CRS("+proj=longlat"))
+map <- reshape::rename(map, c(CNTR_ID = "iso2")) #; summary(map)
+
+map@data$id <- rownames(map@data)
+map.points <- fortify(map, region = "id")
+map.df <- dplyr::inner_join(map.points, map@data, by = "id")
+map.df <- dplyr::inner_join(map.df, eco, by = "iso2")
+
+#tag data
+#created by separate R project first
+load(file=file.path("C:","Stocks","mac.27.nea","DataAnalysis","RFID","RFID.RData"))
+
+dfCatches2 <- dplyr::mutate(dfCatches,
+                            ScanDate = lubridate::ymd_hms(Processing_Date),
+                            Julian = lubridate::yday(ScanDate),
+                            ScanYear = lubridate::year(ScanDate),
+                            ScanMonth = lubridate::month(ScanDate),
+                            PType = "M",
+                            Nation = dplyr::case_when(Nation == "Eire" ~ "IE",
+                                                      Nation == "Norway" ~ "NO",
+                                                      Nation == "Sweden" ~ "SE",
+                                                      Nation == "GB" ~ "UKS",
+                                                      Nation == "IS" ~ "IC",
+                                                      TRUE ~ Nation)) %>%
+  select(Year= ScanYear, Month=ScanMonth, PType, Date=ScanDate, Julian,
+         SR = ices_rectangle, Ctry=Nation, Catch=Weight, AvgWeight=WeightAvg) %>%
+  left_join(select(dfSR,SR,South,North,East,West,MidLat,MidLon)) %>%
+  select(Ctry, Year, SR, Lat=MidLat, Lon=MidLon, PType, PNum = Month, Catch)
+
+dfTot <- dfCatches2 %>%
+  group_by(Year,SR,Lat,Lon) %>%
+  summarise(Tot=sum(Catch)/1e3)
+
+dfMonthly <- dfCatches2 %>%
+  group_by(Year,PNum,SR,Lat,Lon) %>%
+  summarise(Tot=sum(Catch)/1e3)
+
+#check for any unmatched stat rectangles
+sum(is.na(dfCatches2$North))
+
+#number of recaptures (specific missions (experiments))
+dfRecp <- dplyr::filter(dfExpeditions,!is.na(RecaptureDate) & 
+                          Mission %in% c(2011808,2012836,2013828,2014809,2015830,2016832,2017837,2018828))
+
+#retrieve the catch details for the recapture
+dfRecp2 <- dplyr::left_join(dfRecp,select(dfCatches,pkID,ices_rectangle,Processing_Date,Nation),by=c("CatchID"="pkID"))
+
+dfRecp3 <- dfRecp2 %>%
+  select(ices_rectangle,Processing_Date,Nation) %>%
+  mutate(ScanDate = lubridate::ymd_hms(Processing_Date)) %>%
+  mutate(ScanYear = lubridate::year(ScanDate)) %>%
+  mutate(ScanMonth = lubridate::month(ScanDate)) %>%
+  select(SR=ices_rectangle,ScanYear,ScanMonth,Nation) %>%
+  filter(!is.na(SR) & !is.na(Nation)) %>%
+  mutate(Nation = case_when(Nation == "Eire" ~ "IE",
+                            Nation == "Norway" ~ "NO",
+                            Nation == "Sweden" ~ "SE",
+                            Nation == "GB" ~ "UKS",
+                            Nation == "IS" ~ "IC",
+                            TRUE ~ Nation)) %>%
+  group_by(ScanYear,ScanMonth,SR,Nation) %>%
+  summarise(count=n()) %>%
+  left_join(select(dfSR,SR,South,North,East,West,MidLat,MidLon))
+
+dfRecp <- dfRecp %>%
+  select(ICES,ReleseDate,RecaptureDate) %>%
+  mutate(Release = lubridate::ymd_hms(ReleseDate),
+         Recapture = lubridate::ymd_hms(RecaptureDate)) %>%
+  select(ICES,Release,Recapture)
+
+dfScannedCatch <- dfCatches2 %>%
+  group_by(Ctry,Year,SR,Lat,Lon,PType,PNum) %>%
+  summarise(Tot=sum(Catch)/1e3)
+
+#join with number of recaptures
+dfScannedCatch <- dplyr::full_join(dfScannedCatch,
+                                    dplyr::select(dfRecp3,Ctry=Nation,Year=ScanYear,PNum=ScanMonth,SR=SR,count))
+dfScannedCatch$count[is.na(dfScannedCatch$count)]<-0
+
+table(dfScannedCatch$Year)
+table(dfScannedCatch$Ctry)
+
+#all catch by SR data
+dfCatchBySR <- read.table(file = ".\\Data\\WGCatchBySR.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+#select countries, years 
+dfCatchBySR <- dplyr::filter(dfCatchBySR, Ctry %in% c('FO','IC','NO','UKS') & Year>=2012 & Year<=2017)
+#all RFID data
+dfRFID <- dplyr::filter(dfScannedCatch, Ctry %in% c('FO','IC','NO','UKS') & Year>=2012 & Year<=2017)
+
+#generate the plots
+#for (cry in c('IC','FO','NO','IC','UKS')) {
+for (cry in c('UKS')) {
+
+  #country annual totals
+  dfCountryCatch <- dfCatchBySR %>%
+    filter(Ctry == cry & PType == "M") %>%
+    select(Ctry,Year,Catch) %>%
+    group_by(Ctry,Year) %>%
+    summarise(Total = sum(Catch))
+
+  dfCountryRFID <- ungroup(dfRFID) %>%
+    filter(Ctry == cry & PType == "M") %>%
+    select(Ctry,Year,Tot,count) %>%
+    group_by(Ctry,Year) %>%
+    summarise(Scanned = sum(Tot), Fish=sum(count))
+  
+  dfCountry <- dplyr::full_join(dfCountryCatch,dfCountryRFID)
+  dfCountry <- dplyr::mutate(dfCountry, Prop = Scanned/Total)
+  
+  dfCountry.Table <- xtable(dfCountry,digits=c(0,0,0,0,0,0,2))
+  writeLines(text = print(dfCountry.Table, type="latex"),
+             con = file.path(paste0(cry,".tex")))
+    
+  for (y in seq(2012,2017)){
+    
+    #monthly totals
+    dfCountryCatch <- dfCatchBySR %>%
+      filter(Ctry == cry & Year == y & PType == "M") %>%
+      select(Ctry,Year,PNum,Catch) %>%
+      group_by(Ctry,Year,PNum) %>%
+      summarise(Catch = sum(Catch)) %>%
+      full_join(data.frame(Ctry=rep(cry,12),Year=rep(y,12),PNum=seq(1,12),stringsAsFactors=FALSE)) %>%
+      arrange(PNum) %>%
+      mutate(Month = Months[PNum]) %>%
+      mutate(Catch = coalesce(Catch,0)) %>%
+      select(Ctry,Year,Month,Catch)
+    
+    dfCountryRFID <- ungroup(dfRFID) %>%
+      filter(Ctry == cry & Year == y & PType == "M") %>%
+      select(Ctry,Year,PNum,Tot,count) %>%
+      group_by(Ctry,Year,PNum) %>%
+      summarise(Scanned = sum(Tot), Fish=sum(count)) %>%
+      mutate(Month = Months[PNum]) %>%
+      select(Ctry,Year,Month,Scanned,Fish)
+      
+    dfCountry <- dplyr::full_join(dfCountryCatch,dfCountryRFID)
+    dfCountry <- dplyr::mutate(dfCountry, Prop = Scanned/Catch)
+    
+    dfCountry.Table <- xtable(dfCountry, digits=c(0,0,0,0,0,0,0,2))
+    writeLines(text = print(dfCountry.Table, type="latex"),
+               con = file.path(paste0(cry,"_",y,".tex")))
+    
+    #reset plot counter
+    p <- 0
+    
+    for (m in 1:12){
+
+      #Scotland
+      if (cry=='UKS'){xlim <- c(-16,8);ylim <- c(50,66)}
+      if (cry=='FO'){xlim <- c(-16,8);ylim <- c(54,70)}
+      if (cry=='NO'){xlim <- c(-12,12);ylim <- c(54,70)}
+      if (cry=='IC'){xlim <- c(-26,12);ylim <- c(60,68)}
+      
+      lon.dist <- geosphere::distGeo(p1=c(min(xlim),mean(ylim)),p2=c(max(xlim),mean(ylim)))
+      lat.dist <- geosphere::distGeo(p1=c(mean(xlim),min(ylim)),p2=c(mean(xlim),max(ylim)))
+      aspect <- lon.dist/lat.dist
+      
+      #catch by SR first
+      dfSR <- fSubset(y = y, ptype = "M", pnum = m, Cry=cry)
+      dfSR <- dplyr::filter(dfSR, Tot>Catch.Limits[1])
+
+      catchmap <- ggplot(map.df) +
+        coord_cartesian(xlim = xlim, ylim = ylim) +
+        geom_hline(yintercept=seq(40,80,by=0.5), linetype="solid", color = "grey") +
+        geom_vline(xintercept=seq(-30,20), linetype="solid", color = "grey") +
+        aes(long, lat, group=group) +
+        geom_path(color = "white") +
+        geom_polygon() +
+        theme_map()
+      
+      if (nrow(dfSR)>0) {
+        
+        #create data frame with polygons for catch
+        dfPolys <- data.frame(SR=c(),Lat=c(),Lon=c(),Catch=c())
+        
+        for (i in 1:nrow(dfSR)){
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfSR$SR[i],Lat=dfSR$Lat[i]-0.25,Lon=dfSR$Lon[i]-0.5,
+                                                         Catch=fCatchBin(dfSR$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                         stringsAsFactors = FALSE))
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfSR$SR[i],Lat=dfSR$Lat[i]-0.25,Lon=dfSR$Lon[i]+0.5,
+                                                         Catch=fCatchBin(dfSR$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                         stringsAsFactors = FALSE))
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfSR$SR[i],Lat=dfSR$Lat[i]+0.25,Lon=dfSR$Lon[i]+0.5,
+                                                         Catch=fCatchBin(dfSR$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                         stringsAsFactors = FALSE))
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfSR$SR[i],Lat=dfSR$Lat[i]+0.25,Lon=dfSR$Lon[i]-0.5,
+                                                         Catch=fCatchBin(dfSR$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                         stringsAsFactors = FALSE))
+        }
+        
+        dfPolys$Catch <- factor(dfPolys$Catch,levels=Catch.Bins)
+        
+        catchmap <- catchmap + geom_polygon(data=dfPolys, 
+                                            aes(x=Lon,y=Lat,group=SR,fill=Catch)) +
+          scale_fill_manual(values = Four.Colours, drop=FALSE)
+        
+        catchmap <- catchmap + geom_polygon(data=map.df,
+                                            aes(long, lat, group=group))
+        
+      }
+      
+      catchmap <- catchmap + guides(fill=guide_legend(title=paste(cry,y,Months.Abbrev[m],sep=",")))
+        
+      #now scanned catch and tag returns
+      dfSquares <- dplyr::filter(dfScannedCatch, Ctry==cry & Year==y & PNum==m & Tot>0)
+
+      RFIDmap <- ggplot(map.df) + 
+        coord_cartesian(xlim = xlim, ylim = ylim) +
+        geom_hline(yintercept=seq(40,80,by=0.5), linetype="solid", color = "grey") +
+        geom_vline(xintercept=seq(-30,20), linetype="solid", color = "grey") +
+        aes(long, lat, group=group) +
+        geom_path(color = "white") + 
+        geom_polygon() + 
+        theme_map()
+
+      if(nrow(dfSquares)>0) {
+        
+        dfPolys <- data.frame(SR=c(),Lat=c(),Lon=c(),Scanned=c(),Recap=c())
+        
+        for (i in 1:nrow(dfSquares)){
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfSquares$SR[i],
+                                                         Lat=dfSquares$Lat[i]-0.25,
+                                                         MidLat=dfSquares$Lat[i],
+                                                         Lon=dfSquares$Lon[i]-0.5,
+                                                         MidLon=dfSquares$Lon[i],
+                                                         Scanned=fCatchBin(dfSquares$Tot[i],Limits=Scanned.Limits,Labels=Scanned.Bins),
+                                                         Recap = dfSquares$count[i],
+                                                         stringsAsFactors = FALSE))
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfSquares$SR[i],
+                                                         Lat=dfSquares$Lat[i]-0.25,
+                                                         MidLat=dfSquares$Lat[i],
+                                                         Lon=dfSquares$Lon[i]+0.5,
+                                                         MidLon=dfSquares$Lon[i],
+                                                         Scanned=fCatchBin(dfSquares$Tot[i],Limits=Scanned.Limits,Labels=Scanned.Bins),
+                                                         Recap = dfSquares$count[i],
+                                                         stringsAsFactors = FALSE))
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfSquares$SR[i],
+                                                         Lat=dfSquares$Lat[i]+0.25,
+                                                         MidLat=dfSquares$Lat[i],
+                                                         Lon=dfSquares$Lon[i]+0.5,
+                                                         MidLon=dfSquares$Lon[i],
+                                                         Scanned=fCatchBin(dfSquares$Tot[i],Limits=Scanned.Limits,Labels=Scanned.Bins),
+                                                         Recap = dfSquares$count[i],
+                                                         stringsAsFactors = FALSE))
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfSquares$SR[i],
+                                                         Lat=dfSquares$Lat[i]+0.25,
+                                                         MidLat=dfSquares$Lat[i],
+                                                         Lon=dfSquares$Lon[i]-0.5,
+                                                         MidLon=dfSquares$Lon[i],
+                                                         Scanned=fCatchBin(dfSquares$Tot[i],Limits=Scanned.Limits,Labels=Scanned.Bins),
+                                                         Recap = dfSquares$count[i],
+                                                         stringsAsFactors = FALSE))
+        }
+        
+        if(nrow(dfPolys)>0){dfPolys$Scanned <- factor(dfPolys$Scanned,levels=Scanned.Bins)}
+        
+        RFIDmap <- RFIDmap + 
+          geom_polygon(data=dfPolys,aes(x=Lon,y=Lat,group=SR,fill=Scanned)) +
+          scale_fill_manual(values = Four.Colours, drop=FALSE) +
+          geom_text(data=select(dfPolys,MidLon,MidLat,Recap),inherit.aes=FALSE,aes(x=MidLon,y=MidLat,label=Recap))
+          
+      }
+
+      #side by side for comparison        
+      if(cry=='IC'){
+        pall <- ggarrange(catchmap,RFIDmap,nrow=2,ncol=1)  
+      } else {
+        pall <- ggarrange(catchmap,RFIDmap,nrow=1,ncol=2)
+      }
+  
+      #increment plot counter
+      p <- p + 1
+        
+      assign(paste0('Plot',p),pall)
+
+      ggexport(pall, 
+               filename=file.path(".","Plots","WKIBPNEAMac",y,cry,paste0(paste(y,Months.Abbrev[m],cry,sep="_"),".png")),
+               width=800,height=500)
+      
+    } #end month
+
+    #output pdf
+    ggexport(Plot1,Plot2,Plot3,Plot4,Plot5,Plot6,Plot7,Plot8,Plot9,Plot10,Plot11,Plot12,
+             filename=file.path(".","Plots","WKIBPNEAMac",paste0(cry,"_",y,".pdf")))
+    
+    #remove plot objects
+    rm("Plot1","Plot2","Plot3","Plot4","Plot5","Plot6","Plot7","Plot8","Plot9","Plot10","Plot11","Plot12")
+    
+  } #end year
+  
+} #end country
+
+
+
+
+
 
 #9th January - WKIBPNEAMac
 #Catch by SR by Month by Country

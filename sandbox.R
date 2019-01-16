@@ -18,3 +18,36 @@ g4 <- rasterGrob(p4)
 pall <- ggarrange(g1,g2,g3,g4,nrow=2,ncol=2)  
   
 ggexport(pall, filename="pAll.pdf")
+
+
+#ggplot basemap
+library(maps)
+
+for (i in 1:length(coast)){
+  if (!is.null(coast[[i]])){
+    if (coast[[i]]$fill==TRUE) {
+      polygon(coast[[i]]$Lon,coast[[i]]$Lat,col="grey")
+    } else {
+      polygon(coast[[i]]$Lon,coast[[i]]$Lat,col="white")             
+    }  
+  }
+}
+
+dfTemp <- data.frame(long = t2$Lon, lat = t2$Lat)
+
+g <- ggplot()
+for (i in 1:length(coast)){
+  if (!is.null(coast[[i]])){
+    dfTemp <- data.frame(long = t2$Lon, lat = t2$Lat)
+    g <- g + geom_path(data = dfTemp, aes(x = long, y = lat))
+#    if (coast[[i]]$fill==TRUE) {
+#      polygon(coast[[i]]$Lon,coast[[i]]$Lat,col="grey")
+#    } else {
+#      polygon(coast[[i]]$Lon,coast[[i]]$Lat,col="white")             
+#    }  
+  }
+}
+
+ggplot() + geom_path(data = dfTemp, aes(x = long, y = lat)))
+
+

@@ -4,3 +4,14 @@
 .Ruserdata
 Plots
 Data
+FO*.tex
+NO*.tex
+IC*.tex
+UKS*.tex
+*.aux
+*.bbl
+*.*~
+*.toc
+*.pdf
+*.blg
+*.log
