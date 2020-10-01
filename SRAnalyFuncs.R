@@ -3,13 +3,13 @@
 fPlotDist <- function(dfSub, min, max, fill.col, border.col, avg=FALSE){
   
   if (!avg) {
-    dfSub <- filter(dfSub, Tot<=max & Tot>min)
+    dfSub <- filter(dfSub, TOT<=max & TOT>min)
   } else {
-    dfSub <- filter(dfSub, Avg<=max & Avg>min)
+    dfSub <- filter(dfSub, AVG<=max & AVG>min)
   }
   
-  dfSub <- inner_join(dfSub,SR,by=c("SR"="SR"))
-  
+  dfSub <- inner_join(dfSub,dfSR,by=c("SR"="Rect"))
+
   for (i in 1:nrow(dfSub)){
     polygon(c(dfSub$West[i],dfSub$East[i],dfSub$East[i],dfSub$West[i],dfSub$West[i]),
             c(dfSub$South[i],dfSub$South[i],dfSub$North[i],dfSub$North[i],dfSub$South[i]),
@@ -29,7 +29,11 @@ fPlotBaseMap <- function(xlim=c(-12,8),ylim=c(42,65),xaxis=TRUE,xlabs=TRUE,yaxis
          xlab="",
          ylab="",
          type="n",
-         axes=FALSE)}
+         axes=FALSE)
+    
+    polygon(c(xlim[1]-5,xlim[2]+5,xlim[2]+5,xlim[1]-5),c(ylim[2]+5,ylim[2]+5,ylim[1]-5,ylim[1]-5),col='lightcyan')
+  }
+  
   
   if (SR) {
     abline(h=seq(30,80,by=0.5),col="grey")
@@ -39,9 +43,11 @@ fPlotBaseMap <- function(xlim=c(-12,8),ylim=c(42,65),xaxis=TRUE,xlabs=TRUE,yaxis
   for (i in 1:length(coast)){
     if (!is.null(coast[[i]])){
       if (coast[[i]]$fill==TRUE) {
-        polygon(coast[[i]]$Lon,coast[[i]]$Lat,col="grey")
+        #polygon(coast[[i]]$Lon,coast[[i]]$Lat,col="grey")
+        polygon(coast[[i]]$Lon,coast[[i]]$Lat,col="#7D86A1")             
       } else {
-        polygon(coast[[i]]$Lon,coast[[i]]$Lat,col="white")             
+        #polygon(coast[[i]]$Lon,coast[[i]]$Lat,col="white")             
+        polygon(coast[[i]]$Lon,coast[[i]]$Lat,col='lightcyan')             
       }  
     }
   }
@@ -114,9 +120,11 @@ fPlotBaseMap <- function(xlim=c(-12,8),ylim=c(42,65),xaxis=TRUE,xlabs=TRUE,yaxis
   for (i in 1:length(coast)){
     if (!is.null(coast[[i]])){
       if (coast[[i]]$fill==TRUE) {
-        polygon(coast[[i]]$Lon,coast[[i]]$Lat,col="grey")
+        #polygon(coast[[i]]$Lon,coast[[i]]$Lat,col="grey")
+        polygon(coast[[i]]$Lon,coast[[i]]$Lat,col="#7D86A1")             
       } else {
-        polygon(coast[[i]]$Lon,coast[[i]]$Lat,col="white")             
+        #polygon(coast[[i]]$Lon,coast[[i]]$Lat,col="white")   
+        polygon(coast[[i]]$Lon,coast[[i]]$Lat,col='lightcyan')             
       }  
     }
   }
@@ -145,13 +153,17 @@ fSubset <- function(src = ".\\Data\\WGCatchBySR.csv", y, ptype, pnum, Cry){
   
   #read in the data
   df <- read.table(file = src, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+  names(df) <- toupper(names(df))
+  
+  names(df)[names(df)=="RECT"]<-"SR"
+  names(df)[names(df)=="COUNTRY"]<-"CTRY"
   
   #select year(s)
   #df <- filter(df, Year == y)
-  df <- filter(df, Year %in% y)
+  df <- filter(df, YEAR %in% y)
   
   #select countries
-  if (!(missing(Cry))) {df <- filter(df, Ctry %in% Cry)}
+  if (!(missing(Cry))) {df <- filter(df, CTRY %in% Cry)}
   
   #annual data
   #if pnum is specified then return the summed catches for pnum
@@ -160,54 +172,66 @@ fSubset <- function(src = ".\\Data\\WGCatchBySR.csv", y, ptype, pnum, Cry){
     
     if (!(missing(pnum))){
       df <- df %>%
-        filter(Year %in% pnum) %>%
-        group_by(Year,SR,Lat,Lon) %>%
-        summarise(Tot=sum(Catch)) %>%
-        select(Year,SR,Lat,Lon,Tot)
+        filter(YEAR %in% pnum) %>%
+        group_by(YEAR,SR,LAT,LON) %>%
+        summarise(TOT=sum(CATCH)) %>%
+        select(YEAR,SR,LAT,LON,TOT)
     } else {
       df <- df %>%
-        group_by(Year,SR,Lat,Lon) %>%
-        summarise(SubTot=sum(Catch)) %>%
-        group_by(SR,Lat,Lon) %>%
-        summarise(Tot=sum(SubTot),Avg=sum(SubTot)/length(y))
+        group_by(YEAR,SR,LAT,LON) %>%
+        summarise(SUBTOT=sum(CATCH)) %>%
+        group_by(SR,LAT,LON) %>%
+        summarise(TOT=sum(SUBTOT),AVG=sum(SUBTOT)/length(y))
     }
     
     
   } else if (toupper(ptype) == "Q") {
     #quarterly
 
-    df <- filter(df, (PType=="Q" & PNum %in% pnum) | (PType=="M" & PNum %in% unlist(months[paste0('Q',pnum)])))
+    df <- filter(df, (PTYPE=="Q" & PNUM %in% pnum) | (PTYPE=="M" & PNUM %in% unlist(months[paste0('Q',pnum)])))
 
     #data frame to return
-    df <- select(group_by(df,Year,SR,Lat,Lon),Year,SR,Lat,Lon,Catch) %>% summarise(Tot=sum(Catch))
+    df <- select(group_by(df,YEAR,SR,LAT,LON),YEAR,SR,LAT,LON,CATCH) %>% summarise(TOT=sum(CATCH))
     
   } else if (toupper(ptype) == "M") {     #monthly
     
     #monthly data
-    dfM <- filter(df, PType=="M" & PNum %in% pnum)
+    dfM <- filter(df, PTYPE=="M" & PNUM %in% pnum)
     #cat(nrow(dfM),"monthly records\n")
+    
     #quarterly data 
-    dfQ <- filter(df, PType=="Q" & PNum %in% quarters[pnum])
+    dfQ <- filter(df, PTYPE=="Q" & PNUM %in% quarters[pnum])
     #cat(nrow(dfQ),"quarterly records\n")
     
-    #divide catch by 3
-    dfQ <- mutate(dfQ, CatchM = Catch/3)
-    #remove original Catch column
-    dfQ <- select(dfQ,-Catch)
+    #divide quarterly catch into months
+    if (nrow(dfQ)>0) {
+      for (i in 1:nrow(dfQ)){
+        dfM <- dplyr::bind_rows(dfM,
+                                data.frame(CTRY=rep(dfQ$CTRY[i],3),
+                                           YEAR=rep(dfQ$YEAR[i],3),
+                                           SR=rep(dfQ$SR[i],3),
+                                           LAT=rep(dfQ$LAT[i],3),
+                                           LON=rep(dfQ$LON[i],3),
+                                           PTYPE=rep("M",3),
+                                           PNUM=unlist(months[paste0('Q',dfQ$PNUM[i])]),
+                                           CATCH = dfQ$CATCH[i]/3,
+                                           stringsAsFactors = FALSE))
+      }
+    }
     
-    names(dfQ) <- names(dfM)
-    df <- bind_rows(dfM,dfQ)
+    #remove any period numbers not required (there may be monthly values inserted here that were not requested)
+    df <- dplyr::filter(dfM,PNUM %in% pnum)
 
     #data frame to return
-    df <- select(group_by(df,Year,SR,Lat,Lon),Year,SR,Lat,Lon,Catch) %>% summarise(Tot=sum(Catch))
+    df <- select(group_by(df,YEAR,SR,LAT,LON),YEAR,SR,LAT,LON,CATCH) %>% summarise(TOT=sum(CATCH))
   
   } else if (toupper(ptype) == "W") {     #weekly
 
     #weekly
-    df <- filter(df, PType=="W" & PNum==pnum)
+    df <- filter(df, PTYPE=="W" & PNUM==pnum)
 
     #data frame to return
-    df <- select(group_by(df,Year,SR,Lat,Lon),Year,SR,Lat,Lon,Catch) %>% summarise(Tot=sum(Catch))
+    df <- select(group_by(df,YEAR,SR,LAT,LON),YEAR,SR,LAT,LON,CATCH) %>% summarise(TOT=sum(CATCH))
     
   }
   

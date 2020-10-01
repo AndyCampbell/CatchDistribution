@@ -1,9 +1,14 @@
 #Generate catch by SR maps
 
 #read in raw data, should be in the Data directory and in a file called WGCatchBySR.csv
-#it's generated from the exchange sheets by script ExtractCatchBySR.R
+#this file is generated from the exchange sheets by script ExtractCatchBySR.R
 
 #Change Log
+#01/10/2020 - HOM Stockbook plots
+#29/09/2020 - MAC stockbook maps
+#28/09/2020 - BW stockbook maps
+#05/11/2019 - mac maps for Stockbook
+#10/09/2019 - BW maps (update of BIM report)
 #15/01/2019 - WKIBPNEAMac ggplot maps
 #08/01/2019 - WKIBPNEAMac maps
 #21/08/2018 - WGWIDE 2018 maps
@@ -42,12 +47,1177 @@ Months.Abbrev <- c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","
 Four.Colours <- c("lightpink", "lightpink3", "firebrick2","firebrick4")
 Catch.Bins <- c("1t-100t","100t-1000t","1000t-3000t",">3000t")
 Scanned.Bins <- c("1t-100t","100t-1000t","1000t-3000t",">3000t")
+Scanned.Bins <- c("1t-100t","100t-1000t","1000t-3000t",">3000t")
 Catch.Limits <- c(1,100,1000,3000)
 Scanned.Limits <- c(1,100,1000,3000)
+Seven.Colours <- rev(heat.colors(7))
+
+#map details
+eco <- subset(read.csv(file=file.path(".","..","Data","RData","iarc.eco.2008.csv"), header = TRUE, sep=","), iso2 != "EU27")
+map <- readShapeSpatial(fn=file.path(".","..","Data","maps","countries//CNTR_RG_60M_2006"), proj4string = CRS("+proj=longlat"))
+map <- reshape::rename(map, c(CNTR_ID = "iso2")) #; summary(map)
+
+map@data$id <- rownames(map@data)
+map.points <- fortify(map, region = "id")
+map.df <- dplyr::inner_join(map.points, map@data, by = "id")
+map.df <- dplyr::inner_join(map.df, eco, by = "iso2")
+
+
+#01/10/2020 HOM Stockbook plots
+#horse mackerel
+data.y <- 2019
+rep.y <- 2020
+
+png(filename = file.path(getwd(),"Plots","Stockbooks",rep.y,paste0("WG",data.y,"_HOM_CBySR.png")),width=1200, height=1600)
+
+#basemap
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+#annual data
+dfSub <- fSubset(src = ".\\Data\\hom.27WGCatchBySR.csv",y = data.y, ptype = "Y", pnum = data.y)
+
+range(dfSub$TOT)
+
+fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+fPlotDist(dfSub,min=1,max=10,fill.col="lightpink",border.col="lightpink")
+fPlotDist(dfSub,min=10,max=100,fill.col="lightpink3",border.col="lightpink3")
+fPlotDist(dfSub,min=100,max=1000,fill.col="firebrick2",border.col="firebrick2")
+fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<1t","1t to 10t","10t to 100t","100t to 1000t",">1000t"),
+       fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("Catch ",data.y))
+
+dev.off()
+
+
+#Irish catch
+png(filename = file.path(getwd(),"Plots","Stockbooks",rep.y,paste0("IE",data.y,"_HOM_CBySR.png")),width=1200, height=1600)
+
+#basebap
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+#annual data
+dfSub <- fSubset(src = ".\\Data\\hom.27WGCatchBySR.csv",y = data.y, ptype = "Y", pnum = data.y, Cry='IRL')
+
+range(dfSub$TOT)
+
+fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+fPlotDist(dfSub,min=1,max=10,fill.col="lightpink",border.col="lightpink")
+fPlotDist(dfSub,min=10,max=100,fill.col="lightpink3",border.col="lightpink3")
+fPlotDist(dfSub,min=100,max=1000,fill.col="firebrick2",border.col="firebrick2")
+fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<1t","1t to 10t","10t to 100t","100t to 1000t",">1000t"),
+       fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("IRL Catch ",data.y))
+
+dev.off()
+
+#end 1/10/2020
+
+#29/09/2020 Mackerel Stockbook plots
+#plot of catch distribution for entire year for 1) all nations 2) Ireland only
+#no legend, no grid lines, no axis notations
+
+#data year, reporting year
+data.y <- 2019; rep.y <- 2020
+
+#jpeg(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\Total",data.y,"_MAC_CBySR.jpg"),width=1200, height=1600, quality=100)
+png(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\Total",data.y,"_MAC_CBySR.png"),width=1200, height=1600)
+
+dfSR <- fSubset(y = data.y, ptype = "Y", pnum = data.y)
+
+fPlotBaseMap(xlim=c(-32,16),ylim=c(36,72),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+with(filter(dfSR, TOT<100 & TOT>=1),
+     for (i in 1:nrow(filter(dfSR, TOT<100))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="lightpink", border="lightpink")
+     }
+)
+
+with(filter(dfSR, TOT<1000 & TOT>=100),
+     for (i in 1:nrow(filter(dfSR, TOT<1000 & TOT>=100))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="lightpink3", border="lightpink3")
+     }
+)
+
+with(filter(dfSR, TOT<10000 & TOT>=1000),
+     for (i in 1:nrow(filter(dfSR, TOT<10000 & TOT>=1000))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="firebrick2", border="firebrick2")
+     }
+)
+
+with(filter(dfSR, TOT>=10000),
+     for (i in 1:nrow(filter(dfSR, TOT>=10000))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="firebrick4", border="firebrick4")
+     }
+)
+
+fPlotBaseMap(xlim=c(-32,16),ylim=c(36,72),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+
+legend(x = "bottomright",
+       legend = c("<100t","100t to 1000t","1000t to 10000t",">15000t"),
+       fill = c("lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("Catch ",data.y))
+
+dev.off()
+
+#Irish only
+
+#jpeg(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\IE",data.y,"_MAC_CBySR.jpg"),width=1200, height=1600, quality=100)
+png(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\IE",data.y,"_MAC_CBySR.png"),width=1200, height=1600)
+
+dfSR <- fSubset(y = data.y, ptype = "Y", pnum = data.y, Cry = 'IE')
+
+fPlotBaseMap(xlim=c(-32,16),ylim=c(36,72),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+with(filter(dfSR, TOT<100 & TOT>=1),
+     for (i in 1:nrow(filter(dfSR, TOT<100))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="lightpink", border="lightpink")
+     }
+)
+
+with(filter(dfSR, TOT<1000 & TOT>=100),
+     for (i in 1:nrow(filter(dfSR, TOT<1000 & TOT>=100))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="lightpink3", border="lightpink3")
+     }
+)
+
+with(filter(dfSR, TOT<10000 & TOT>=1000),
+     for (i in 1:nrow(filter(dfSR, TOT<10000 & TOT>=1000))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="firebrick2", border="firebrick2")
+     }
+)
+
+with(filter(dfSR, TOT>=10000),
+     for (i in 1:nrow(filter(dfSR, TOT>=10000))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="firebrick4", border="firebrick4")
+     }
+)
+
+fPlotBaseMap(xlim=c(-32,16),ylim=c(36,72),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<100t","100t to 1000t","1000t to 10000t",">15000t"),
+       fill = c("lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("IRL Catch ",data.y))
+
+dev.off()
+
+#end 29/09/2020
+
+#28/09/2020
+#Blue Whiting Stockbook plots
+#whb/WGWIDE2020_CatchesByRect_WHB.xlsx retreived from WGWIDE2020 Sharepoint. Saved into csv format from Excel
+
+#all fleets
+y <- 2019 #data year
+png(filename = paste0(".\\Plots\\Stockbooks\\2020\\WG",y,"_WHB_CBySR.png"),width=1200, height=1600)
+
+#basebap
+fPlotBaseMap(xlim=c(-19,10),ylim=c(37,70),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+#annual data
+dfSub <- fSubset(src = ".\\Data\\whb.27.1-91214WGCatchBySR.wgwide2020.csv",y = y, ptype = "Y", pnum = y)
+
+range(dfSub$TOT)
+
+fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+fPlotDist(dfSub,min=1,max=100,fill.col="lightpink",border.col="lightpink")
+fPlotDist(dfSub,min=100,max=1000,fill.col="lightpink3",border.col="lightpink3")
+fPlotDist(dfSub,min=1000,max=15000,fill.col="firebrick2",border.col="firebrick2")
+fPlotDist(dfSub,min=15000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+
+fPlotBaseMap(xlim=c(-19,10),ylim=c(37,70),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<1t","1t to 100t","100t to 1000t","1000t to 15000t",">15000t"),
+       fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("Catch ",y))
+
+dev.off()
+
+
+#Blue Whiting - by country
+#crys <- c("DK","FO","FR","DE","IE","IC","LT","NL","NO","PT","RU","UKS","SE","ES","UKE")
+crys <- c("DEU","DNK","ESP","FRA","FRO","GBR.EW","GBR.N","GBR.S","GRL","IRL","ISL","NLD","NOR","POL","PRT","RUS","SWE")
+
+for (c in crys) {
+  
+  png(filename = paste0(".\\Plots\\Stockbooks\\2020\\",c,y,"_WHB_CBySR.png"),width=1200, height=1600)
+  
+  #basebap
+  fPlotBaseMap(xlim=c(-19,10),ylim=c(37,70),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+  
+  #annual data
+  dfSub <- fSubset(src = ".\\Data\\whb.27.1-91214WGCatchBySR.wgwide2020.csv",y = y, ptype = "Y", pnum = y, Cry=c)
+  
+  range(dfSub$TOT)
+  
+  fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+  fPlotDist(dfSub,min=1,max=100,fill.col="lightpink",border.col="lightpink")
+  fPlotDist(dfSub,min=100,max=1000,fill.col="lightpink3",border.col="lightpink3")
+  fPlotDist(dfSub,min=1000,max=15000,fill.col="firebrick2",border.col="firebrick2")
+  fPlotDist(dfSub,min=15000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+  
+  fPlotBaseMap(xlim=c(-19,10),ylim=c(37,70),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+  
+  legend(x = "bottomright",
+         legend = c("<1t","1t to 100t","100t to 1000t","1000t to 15000t",">15000t"),
+         fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+         border = "black",
+         cex = 4,
+         title = paste0(c," Catch ",y))
+  
+  dev.off()
+  
+}
+
+#end 28/09/2020
+
+
+
+#05/11/2019 Stockbook plots
+#Mackerel
+#plot of catch distribution for entire year for 1) all nations 2) Ireland only
+#no legend, no grid lines, no axis notations
+
+#data year, reporting year
+data.y <- 2018; rep.y <- 2019
+
+#jpeg(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\Total",data.y,"_MAC_CBySR.jpg"),width=1200, height=1600, quality=100)
+png(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\Total",data.y,"_MAC_CBySR.png"),width=1200, height=1600)
+
+dfSR <- fSubset(y = data.y, ptype = "Y", pnum = data.y)
+
+fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+with(filter(dfSR, Tot<100 & Tot>=1),
+     for (i in 1:nrow(filter(dfSR, Tot<100))){
+       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+               col="lightpink", border="lightpink")
+     }
+)
+
+with(filter(dfSR, Tot<1000 & Tot>=100),
+     for (i in 1:nrow(filter(dfSR, Tot<1000 & Tot>=100))){
+       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+               col="lightpink3", border="lightpink3")
+     }
+)
+
+with(filter(dfSR, Tot<10000 & Tot>=1000),
+     for (i in 1:nrow(filter(dfSR, Tot<10000 & Tot>=1000))){
+       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+               col="firebrick2", border="firebrick2")
+     }
+)
+
+with(filter(dfSR, Tot>=10000),
+     for (i in 1:nrow(filter(dfSR, Tot>=10000))){
+       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+               col="firebrick4", border="firebrick4")
+     }
+)
+
+fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+dev.off()
+
+#Irish only
+
+#jpeg(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\IE",data.y,"_MAC_CBySR.jpg"),width=1200, height=1600, quality=100)
+png(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\IE",data.y,"_MAC_CBySR.png"),width=1200, height=1600)
+
+dfSR <- fSubset(y = data.y, ptype = "Y", pnum = data.y, Cry = 'IE')
+
+fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+with(filter(dfSR, Tot<100 & Tot>=1),
+     for (i in 1:nrow(filter(dfSR, Tot<100))){
+       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+               col="lightpink", border="lightpink")
+     }
+)
+
+with(filter(dfSR, Tot<1000 & Tot>=100),
+     for (i in 1:nrow(filter(dfSR, Tot<1000 & Tot>=100))){
+       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+               col="lightpink3", border="lightpink3")
+     }
+)
+
+with(filter(dfSR, Tot<10000 & Tot>=1000),
+     for (i in 1:nrow(filter(dfSR, Tot<10000 & Tot>=1000))){
+       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+               col="firebrick2", border="firebrick2")
+     }
+)
+
+with(filter(dfSR, Tot>=10000),
+     for (i in 1:nrow(filter(dfSR, Tot>=10000))){
+       polygon(c(Lon[i]-0.5,Lon[i]+0.5,Lon[i]+0.5,Lon[i]-0.5,Lon[i]-0.5),
+               c(Lat[i]-0.25,Lat[i]-0.25,Lat[i]+0.25,Lat[i]+0.25,Lat[i]-0.25),
+               col="firebrick4", border="firebrick4")
+     }
+)
+
+fPlotBaseMap(xlim=c(-36,20),ylim=c(36,76),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+dev.off()
+
+
+#horse mackerel
+png(filename = file.path(getwd(),"Plots","Stockbooks",rep.y,paste0("WG",data.y,"_HOM_CBySR.png")),width=1200, height=1600)
+
+#basemap
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+#annual data
+dfSub <- fSubset(src = ".\\Data\\hom.27WGCatchBySR.csv",y = data.y, ptype = "Y", pnum = data.y)
+
+range(dfSub$Tot)
+
+fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+fPlotDist(dfSub,min=1,max=10,fill.col="lightpink",border.col="lightpink")
+fPlotDist(dfSub,min=10,max=100,fill.col="lightpink3",border.col="lightpink3")
+fPlotDist(dfSub,min=100,max=1000,fill.col="firebrick2",border.col="firebrick2")
+fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<1t","1t to 10t","10t to 100t","100t to 1000t",">1000t"),
+       fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("Catch ",data.y))
+
+dev.off()
+
+
+#end Stockbook 2019 (05/11/2019)
+
+
+
+#Irish catch
+png(filename = file.path(getwd(),"Plots","Stockbooks",rep.y,paste0("IE",rep.y,"_HOM_CBySR.png")),width=1200, height=1600)
+
+#basebap
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+#annual data
+dfSub <- fSubset(src = ".\\Data\\hom.27WGCatchBySR.csv",y = data.y, ptype = "Y", pnum = data.y, Cry='IE')
+
+range(dfSub$Tot)
+
+fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+fPlotDist(dfSub,min=1,max=10,fill.col="lightpink",border.col="lightpink")
+fPlotDist(dfSub,min=10,max=100,fill.col="lightpink3",border.col="lightpink3")
+fPlotDist(dfSub,min=100,max=1000,fill.col="firebrick2",border.col="firebrick2")
+fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<1t","1t to 10t","10t to 100t","100t to 1000t",">1000t"),
+       fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("Catch ",data.y))
+
+dev.off()
+
+
+
+
+#10/09/2019
+#Blue Whiting catch plots (for BIM request)
+
+#Blue Whiting - all fleets
+y <- 2018
+png(filename = paste0(".\\Plots\\Stockbooks\\2019\\WG",y,"_WHB_CBySR.png"),width=1200, height=1600)
+
+#basebap
+fPlotBaseMap(xlim=c(-17,10),ylim=c(37,70),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+#annual data
+#dfSub <- fSubset(src = ".\\Data\\whb.27.1-91214WGCatchBySR.csv",y = y, ptype = "Y", pnum = y)
+dfSub <- fSubset(src = ".\\Data\\whb.27.1-91214WGCatchBySR.wgwide2019.csv",y = y, ptype = "Y", pnum = y)
+
+range(dfSub$Tot)
+
+fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+fPlotDist(dfSub,min=1,max=100,fill.col="lightpink",border.col="lightpink")
+fPlotDist(dfSub,min=100,max=1000,fill.col="lightpink3",border.col="lightpink3")
+fPlotDist(dfSub,min=1000,max=15000,fill.col="firebrick2",border.col="firebrick2")
+fPlotDist(dfSub,min=15000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+
+fPlotBaseMap(xlim=c(-17,10),ylim=c(37,70),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<1t","1t to 100t","100t to 1000t","1000t to 15000t",">15000t"),
+       fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("Catch ",y))
+
+dev.off()
+
+
+#Blue Whiting - by country
+#crys <- c("DK","FO","FR","DE","IE","IC","LT","NL","NO","PT","RU","UKS","SE","ES","UKE")
+crys <- c("DEU","DNK","NOR","FRO","ISL","RUS","NLD","UKS","IRL","SCO")
+y <- 2018
+
+for (c in crys) {
+  
+  png(filename = paste0(".\\Plots\\Stockbooks\\2019\\",c,y,"_WHB_CBySR.png"),width=1200, height=1600)
+  
+  #basebap
+  fPlotBaseMap(xlim=c(-17,10),ylim=c(37,70),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+  
+  #annual data
+  dfSub <- fSubset(src = ".\\Data\\whb.27.1-91214WGCatchBySR.wgwide2019.csv",y = y, ptype = "Y", pnum = y, Cry=c)
+  
+  range(dfSub$Tot)
+  
+  fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+  fPlotDist(dfSub,min=1,max=100,fill.col="lightpink",border.col="lightpink")
+  fPlotDist(dfSub,min=100,max=1000,fill.col="lightpink3",border.col="lightpink3")
+  fPlotDist(dfSub,min=1000,max=15000,fill.col="firebrick2",border.col="firebrick2")
+  fPlotDist(dfSub,min=15000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+  
+  fPlotBaseMap(xlim=c(-17,10),ylim=c(37,70),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+  
+  legend(x = "bottomright",
+         legend = c("<1t","1t to 100t","100t to 1000t","1000t to 15000t",">15000t"),
+         fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+         border = "black",
+         cex = 4,
+         title = paste0(c," Catch ",y))
+  
+  dev.off()
+  
+}
+
+#end 10/09/2019
+
+#WKRRMAC - request from Martin Pastoors
+#annual plots
+
+df1 <- read.table(file = paste0(".\\Data\\WGCatchBySR.csv"), header = TRUE, 
+                  sep = ",", stringsAsFactors = FALSE)
+
+dfAllCtry <- df1 %>%
+  group_by(Year,SR,Lat,Lon) %>% 
+  summarise(Tot=sum(Catch))
+
+write.table(dfAllCtry,file="CBySR_Rob.csv",sep=",",quote=FALSE,row.names=FALSE)
+
+#plot settings
+Catch.Bins <- c("<1t","1t-10t","1t-100t","100t-1000t","1000t-5000t","5000t-10000t",">10000t")
+Catch.Limits <- c(0,1,10,100,1000,5000,10000)
+Seven.Colours <- rev(heat.colors(7))
+xlim=c(-36,20)
+ylim=c(36,76)
+#xlim <- c(-8,8);ylim <- c(57,63)
+
+for (y in seq(2010,2017)){
+  
+  df.y <- dplyr::filter(df1,Year==y)
+
+  catchmap <- ggplot(map.df) +
+    coord_cartesian(xlim = xlim, ylim = ylim) +
+    geom_hline(yintercept=seq(34,76,by=0.5), linetype="solid", color = "grey") +
+    geom_vline(xintercept=seq(-42,32), linetype="solid", color = "grey") +
+    aes(long, lat, group=group) +
+    geom_path(color = "white") +
+    geom_polygon() +
+    theme_map()
+  
+  dfRect <- dplyr::filter(df1,Year==y) %>%
+    group_by(Year,SR,Lat,Lon) %>% 
+    summarise(Tot=sum(Catch))
+
+  if (nrow(dfRect)>0) {
+    
+    #create data frame with polygons for catch
+    dfPolys <- data.frame(SR=c(),Lat=c(),Lon=c(),Catch=c())
+    
+    for (i in 1:nrow(dfRect)){
+      dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]-0.25,Lon=dfRect$Lon[i]-0.5,
+                                                     Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                     stringsAsFactors = FALSE))
+      dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]-0.25,Lon=dfRect$Lon[i]+0.5,
+                                                     Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                     stringsAsFactors = FALSE))
+      dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]+0.25,Lon=dfRect$Lon[i]+0.5,
+                                                     Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                     stringsAsFactors = FALSE))
+      dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]+0.25,Lon=dfRect$Lon[i]-0.5,
+                                                     Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                     stringsAsFactors = FALSE))
+    }
+    
+    dfPolys$Catch <- factor(dfPolys$Catch,levels=Catch.Bins)
+    
+    catchmap <- catchmap + geom_polygon(data=dfPolys,
+                                        aes(x=Lon,y=Lat,group=SR,fill=Catch)) +
+      scale_fill_manual(values = Seven.Colours, drop=FALSE) + 
+      theme(legend.position = c(0.0, 0.6), legend.text = element_text(size=10), 
+            legend.title = element_text(size=10))
+    
+    #catchmap <- catchmap + guides(fill=guide_legend(title=plotTitle))
+    
+    catchmap <- catchmap + geom_polygon(data=map.df,
+                                        aes(long, lat, group=group))
+    
+    ggsave(filename = file.path(".","Plots","WKRRMAC",paste0(y,"_AnnCatch.pdf")),
+           plot = catchmap,
+           width = 10,
+           height = 10)
+    
+  }
+}
+
+#end WKRRMAC
+
+
+
+#22nd January - webex
+#exploration of fishing pattern for NO, IE and UKS , IVa Q4
+#raw data
+df1 <- read.table(file = paste0(".\\Data\\WGCatchBySR.csv"), header = TRUE, 
+                  sep = ",", stringsAsFactors = FALSE)
+
+
+df2 <- dplyr::filter(df1,Year %in% c(2012,2013,2014,2015,2016,2017))
+df2 <- dplyr::left_join(df2,dplyr::select(dfSR,SR=Rect,AreaKm2,Div))
+#df2 <- dplyr::filter(df2,Div %in% c("IIa","IVa"))
+df2 <- dplyr::filter(df2,Div %in% c("IVa"))
+df2 <- dplyr::filter(df2,PNum %in% c(10,11,12))
+#keep those countries with samples from IIa and IVa in Q4
+#df2 <- dplyr::filter(df2,Ctry %in% c("DK","FO","IE","NO","UKS"))
+df2 <- dplyr::filter(df2,Ctry %in% c("IE","NO","UKS"))
+df2 <- df2 %>% group_by(Ctry,Year,SR,Lat,Lon,PNum) %>% summarise(Tot=sum(Catch))
+
+
+#df2 <- dplyr::filter(df1,Ctry %in% c("NO","IE","UKS") & Year %in% c(2012,2013,2014,2015,2016,2017))
+#df2 <- dplyr::left_join(df2,dplyr::select(dfSR,SR=Rect,AreaKm2,Div))
+#df2 <- dplyr::filter(df2,Div=="IVa" & PNum %in% c(10,11,12))
+#df2 <- dplyr::filter(df2,Div=="VIa" & PNum %in% c(1,2,3))
+#df2 <- df2 %>% group_by(Ctry,Year,SR,Lat,Lon,PNum) %>% summarise(Tot=sum(Catch))
+#df2 <- df2 %>% group_by(Ctry,Year,SR,Lat,Lon) %>% summarise(Tot=sum(Catch))
+
+Catch.Bins <- c("<1t","1t-10t","1t-100t","100t-1000t","1000t-5000t","5000t-10000t",">10000t")
+Catch.Limits <- c(0,1,10,100,1000,5000,10000)
+Seven.Colours <- rev(heat.colors(7))
+
+#IIa, IVa Q4 2017 plots
+y <- 2017
+
+for (c in names(table(df2$Ctry))) {
+  
+  for (m in c(10,11,12)) {
+
+    xlim <- c(-8,8);ylim <- c(57,63)
+    
+    catchmap <- ggplot(map.df) +
+      coord_cartesian(xlim = xlim, ylim = ylim) +
+      geom_hline(yintercept=seq(34,76,by=0.5), linetype="solid", color = "grey") +
+      geom_vline(xintercept=seq(-42,32), linetype="solid", color = "grey") +
+      aes(long, lat, group=group) +
+      geom_path(color = "white") +
+      geom_polygon() +
+      theme_map()
+
+    dfRect <- dplyr::filter(df2,Year==y & Ctry==c & PNum==m)
+
+    if (nrow(dfRect)>0) {
+      
+      #create data frame with polygons for catch
+      dfPolys <- data.frame(SR=c(),Lat=c(),Lon=c(),Catch=c())
+      
+      for (i in 1:nrow(dfRect)){
+        dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]-0.25,Lon=dfRect$Lon[i]-0.5,
+                                                       Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                       stringsAsFactors = FALSE))
+        dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]-0.25,Lon=dfRect$Lon[i]+0.5,
+                                                       Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                       stringsAsFactors = FALSE))
+        dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]+0.25,Lon=dfRect$Lon[i]+0.5,
+                                                       Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                       stringsAsFactors = FALSE))
+        dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]+0.25,Lon=dfRect$Lon[i]-0.5,
+                                                       Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                       stringsAsFactors = FALSE))
+      }
+      
+      dfPolys$Catch <- factor(dfPolys$Catch,levels=Catch.Bins)
+      
+      catchmap <- catchmap + geom_polygon(data=dfPolys,
+                                          aes(x=Lon,y=Lat,group=SR,fill=Catch)) +
+        scale_fill_manual(values = Seven.Colours, drop=FALSE) + 
+        theme(legend.position = "none")
+        
+        #theme(legend.position = c(0.0, 0.6), legend.text = element_text(size=10), 
+        #      legend.title = element_text(size=10))
+
+      if(m==10){plotTitle <- paste(c,"Oct",as.character(y))}
+      if(m==11){plotTitle <- paste(c,"Nov",as.character(y))}
+      if(m==12){plotTitle <- paste(c,"Dec",as.character(y))}
+      
+      #catchmap <- catchmap + guides(fill=guide_legend(title=plotTitle))
+      
+      catchmap <- catchmap + geom_polygon(data=map.df,
+                                          aes(long, lat, group=group))
+      
+    }
+    
+    catchmap <- catchmap + annotate(geom="text", x=-8, y=63, label=plotTitle, hjust=0)
+    
+    assign(paste0(c,m),catchmap)
+    
+  }
+}
+
+#landscape plot
+#pall <- ggarrange(NO10,IE10,UKS10,DK10,FO10,
+#                  NO11,IE11,UKS11,DK11,FO11,
+#                  NO12,IE12,UKS12,DK12,FO12,
+#                  nrow=3,ncol=5)
+
+#ggsave(filename = file.path(".","Plots","WKIBPNEAMac",paste0("IIa_IVa_Q4_",y,"_Landscape.png")),
+#       plot = pall,
+#       width = 16,
+#       height = 10)
+
+#portrait plot
+#pall <- ggarrange(NO10,NO11,NO12,
+#                  IE10,IE11,IE12,
+#                  UKS10,UKS11,UKS12,
+#                  DK10,DK11,DK12,
+#                  FO10,FO11,FO12,
+#                  nrow=5,ncol=3)
+
+pall <- ggarrange(NO10,NO11,NO12,
+                  IE10,IE11,IE12,
+                  UKS10,UKS11,UKS12,
+                  nrow=3,ncol=3)
+
+#ggsave(filename = file.path(".","Plots","WKIBPNEAMac",paste0("IIa_IVa_Q4_",y,"_Portrait.png")),
+#       plot = pall,
+#       width = 10,
+#       height = 16)
+
+ggsave(filename = file.path(".","Plots","WKIBPNEAMac",paste0("IVa_Q4_",y,"_Portrait.png")),
+       plot = pall,
+       width = 10,
+       height = 10)
+
+
+#VIa, Q1 plots
+for (y in c(2012,2013,2014,2015,2016,2017)){
+  
+  for (c in c("NO","IE","UKS")) {
+    
+    for (m in c(1,2,3,13)) {
+      
+      #IVa
+      xlim <- c(-14,0);ylim <- c(52,60)
+      
+      catchmap <- ggplot(map.df) +
+        coord_cartesian(xlim = xlim, ylim = ylim) +
+        geom_hline(yintercept=seq(34,76,by=0.5), linetype="solid", color = "grey") +
+        geom_vline(xintercept=seq(-42,32), linetype="solid", color = "grey") +
+        aes(long, lat, group=group) +
+        geom_path(color = "white") +
+        geom_polygon() +
+        theme_map()
+      
+      if (m==13) {
+        dfRect <- dplyr::filter(df2,Year==y & Ctry==c) %>%
+          group_by(Ctry,Year,SR,Lat,Lon) %>% 
+          summarise(Tot=sum(Tot))
+      } else {
+        dfRect <- dplyr::filter(df2,Year==y & Ctry==c & PNum==m)
+      }
+      
+      if (nrow(dfRect)>0) {
+        
+        #create data frame with polygons for catch
+        dfPolys <- data.frame(SR=c(),Lat=c(),Lon=c(),Catch=c())
+        
+        for (i in 1:nrow(dfRect)){
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]-0.25,Lon=dfRect$Lon[i]-0.5,
+                                                         Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                         stringsAsFactors = FALSE))
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]-0.25,Lon=dfRect$Lon[i]+0.5,
+                                                         Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                         stringsAsFactors = FALSE))
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]+0.25,Lon=dfRect$Lon[i]+0.5,
+                                                         Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                         stringsAsFactors = FALSE))
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]+0.25,Lon=dfRect$Lon[i]-0.5,
+                                                         Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                         stringsAsFactors = FALSE))
+        }
+        
+        dfPolys$Catch <- factor(dfPolys$Catch,levels=Catch.Bins)
+        
+        catchmap <- catchmap + geom_polygon(data=dfPolys,
+                                            aes(x=Lon,y=Lat,group=SR,fill=Catch)) +
+          scale_fill_manual(values = Seven.Colours, drop=FALSE) + 
+          theme(legend.position = c(0.0, 0.6), legend.text = element_text(size=10), 
+                legend.title = element_text(size=10))
+        
+        if(m==1){plotTitle <- paste(c,"Apr",as.character(y))}
+        if(m==2){plotTitle <- paste(c,"Feb",as.character(y))}
+        if(m==3){plotTitle <- paste(c,"Mar",as.character(y))}
+        if(m==13){plotTitle <- paste(c,"Q1",as.character(y))}
+        
+        catchmap <- catchmap + guides(fill=guide_legend(title=plotTitle))
+        
+        catchmap <- catchmap + geom_polygon(data=map.df,
+                                            aes(long, lat, group=group))
+        
+      }
+      
+      
+      if(m==1){m1<-catchmap}
+      if(m==2){m2<-catchmap}
+      if(m==3){m3<-catchmap}
+      if(m==13){Q1<-catchmap}
+      
+    }   #month loop
+    
+    pall <- ggarrange(m1,m2,m3,Q1,nrow=2,ncol=2)
+    
+    ggsave(filename = file.path(".","Plots","WKIBPNEAMac",paste0("VIa_",c,"_",y,".png")),
+           plot = pall,
+           width = 16,
+           height = 10)
+    
+  }
+  
+}
+
+
+#IVa,Q4 plots
+for (y in c(2012,2013,2014,2015,2016,2017)){
+
+  for (c in c("NO","IE","UKS")) {
+      
+    for (m in c(10,11,12,13)) {
+      
+      #IVa
+      xlim <- c(-6,8);ylim <- c(56,63)
+    
+      catchmap <- ggplot(map.df) +
+        coord_cartesian(xlim = xlim, ylim = ylim) +
+        geom_hline(yintercept=seq(34,76,by=0.5), linetype="solid", color = "grey") +
+        geom_vline(xintercept=seq(-42,32), linetype="solid", color = "grey") +
+        aes(long, lat, group=group) +
+        geom_path(color = "white") +
+        geom_polygon() +
+        theme_map()
+    
+      if (m==13) {
+        dfRect <- dplyr::filter(df2,Year==y & Ctry==c) %>%
+          group_by(Ctry,Year,SR,Lat,Lon) %>% 
+          summarise(Tot=sum(Tot))
+      } else {
+          dfRect <- dplyr::filter(df2,Year==y & Ctry==c & PNum==m)
+      }
+    
+      if (nrow(dfRect)>0) {
+        
+        #create data frame with polygons for catch
+        dfPolys <- data.frame(SR=c(),Lat=c(),Lon=c(),Catch=c())
+        
+        for (i in 1:nrow(dfRect)){
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]-0.25,Lon=dfRect$Lon[i]-0.5,
+                                                         Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                         stringsAsFactors = FALSE))
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]-0.25,Lon=dfRect$Lon[i]+0.5,
+                                                         Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                         stringsAsFactors = FALSE))
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]+0.25,Lon=dfRect$Lon[i]+0.5,
+                                                         Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                         stringsAsFactors = FALSE))
+          dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfRect$SR[i],Lat=dfRect$Lat[i]+0.25,Lon=dfRect$Lon[i]-0.5,
+                                                         Catch=fCatchBin(dfRect$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                         stringsAsFactors = FALSE))
+        }
+        
+        dfPolys$Catch <- factor(dfPolys$Catch,levels=Catch.Bins)
+        
+        catchmap <- catchmap + geom_polygon(data=dfPolys,
+                                            aes(x=Lon,y=Lat,group=SR,fill=Catch)) +
+          scale_fill_manual(values = Seven.Colours, drop=FALSE) + 
+          theme(legend.position = c(0.0, 0.6), legend.text = element_text(size=10), 
+                legend.title = element_text(size=10))
+
+        if(m==10){plotTitle <- paste(c,"Oct",as.character(y))}
+        if(m==11){plotTitle <- paste(c,"Nov",as.character(y))}
+        if(m==12){plotTitle <- paste(c,"Dec",as.character(y))}
+        if(m==13){plotTitle <- paste(c,"Q4",as.character(y))}
+        
+        catchmap <- catchmap + guides(fill=guide_legend(title=plotTitle))
+        
+        catchmap <- catchmap + geom_polygon(data=map.df,
+                                            aes(long, lat, group=group))
+        
+      }
+    
+
+      if(m==10){m10<-catchmap}
+      if(m==11){m11<-catchmap}
+      if(m==12){m12<-catchmap}
+      if(m==13){Q4<-catchmap}
+      
+    }   #month loop
+    
+    pall <- ggarrange(m10,m11,m12,Q4,nrow=2,ncol=2)
+    
+    ggsave(filename = file.path(".","Plots","WKIBPNEAMac",paste0("IVa_",c,"_",y,".png")),
+           plot = pall,
+           width = 16,
+           height = 10)
+  
+}
+  
+}
+
+
+#20th January
+#Request from Steve
+#Catch dist for all countries (combined) for July and August combined from 1995-present.
+#Total fishing area based on SR area
+
+#all catch by SR data
+dfCatchBySR <- read.table(file = ".\\Data\\WGCatchBySR.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+
+#table of catch by month by country (DE,ES,FO,FR,GL,IC,IE,NL,NO,RU,UKS)
+for (c in c("DE","ES","FO","FR","GL","IC","IE","NL","NO","RU","UKS")){
+  dfTemp <- data.frame(Year=c(),Month=c(),Tot=c())
+  for (y in seq(1998,2017)) {
+    for (m in seq(1,12)) {
+      dfSubset <- fSubset(ptype="M",pnum=m,y=y,Cry=c)
+      dfTemp=dplyr::bind_rows(dfTemp,data.frame(Year=y,Month=m,Tot=sum(dfSubset$Tot)))
+    }
+  }
+  dfTable <- xtable(tidyr::spread(dfTemp,key="Month",val="Tot"),digits=c(0,0,0,0,0,0,0,0,0,0,0,0,0,0))
+  writeLines(text=print(dfTable,include.rownames = FALSE, type="latex"),
+             con = file.path(getwd(),"Tex",paste0(c,"CatchByMonth.tex")))
+}
+
+#years with data
+yrs <- as.numeric(names(table(dfCatchBySR$Year)))
+
+dfAllYears <- data.frame(Year=c(),SR=c(),Lat=c(),Lon=c(),Tot=c(),AreaKm2=c(),Div=c())
+dfAllYears.AllMonths <- data.frame(Year=c(),SR=c(),Lat=c(),Lon=c(),Tot=c(),AreaKm2=c(),Div=c())
+dfAllYears.ByQ <- data.frame(Year=c(),Q=c(),SR=c(),Lat=c(),Lon=c(),Tot=c(),AreaKm2=c(),Div=c())
+
+for (y in yrs){
+  dfCatchBySR.Q1 <- fSubset(ptype="Q",pnum=1,y=y)
+  dfCatchBySR.Q2 <- fSubset(ptype="Q",pnum=2,y=y)
+  dfCatchBySR.Q3 <- fSubset(ptype="Q",pnum=3,y=y)
+  dfCatchBySR.Q4 <- fSubset(ptype="Q",pnum=4,y=y)
+  dfCatchBySR.Jul <- fSubset(ptype="M",pnum=7,y=y)
+  dfCatchBySR.Aug <- fSubset(ptype="M",pnum=8,y=y)
+  
+  
+  #dfCatchBySR.AllMonths <- fSubset(ptype="M",pnum=seq(1,12),y=y)
+  
+  #Norway only
+  #dfCatchBySR.Jul <- fSubset(ptype="M",pnum=7,y=y,Cry="NO")
+  #dfCatchBySR.Aug <- fSubset(ptype="M",pnum=8,y=y,Cry="NO")
+  dfCatchBySR.AllMonths <- fSubset(ptype="M",pnum=seq(1,12),y=y,Cry="NO")
+  
+  #Russia only
+  #dfCatchBySR.Jul <- fSubset(ptype="M",pnum=7,y=y,Cry="RU")
+  #dfCatchBySR.Aug <- fSubset(ptype="M",pnum=8,y=y,Cry="RU")
+  
+  dfJulandAug <- dplyr::bind_rows(dfCatchBySR.Jul,dfCatchBySR.Aug)
+  dfJulandAug <- dfJulandAug %>% dplyr::group_by(Year,SR,Lat,Lon) %>% summarise(Tot=sum(Tot))
+  dfCatchBySR.AllMonths <- dfCatchBySR.AllMonths %>% dplyr::group_by(Year,SR,Lat,Lon) %>% summarise(Tot=sum(Tot))
+  dfCatchBySR.Q1 <- dfCatchBySR.Q1 %>% dplyr::group_by(Year,SR,Lat,Lon) %>% summarise(Tot=sum(Tot))
+  dfCatchBySR.Q2 <- dfCatchBySR.Q2 %>% dplyr::group_by(Year,SR,Lat,Lon) %>% summarise(Tot=sum(Tot))
+  dfCatchBySR.Q3 <- dfCatchBySR.Q3 %>% dplyr::group_by(Year,SR,Lat,Lon) %>% summarise(Tot=sum(Tot))
+  dfCatchBySR.Q4 <- dfCatchBySR.Q4 %>% dplyr::group_by(Year,SR,Lat,Lon) %>% summarise(Tot=sum(Tot))
+  
+  #retrieve the Area and Division
+  dfJulandAug <- dplyr::left_join(dfJulandAug,select(dfSR,SR=Rect,AreaKm2,Div))
+  dfCatchBySR.AllMonths <- dplyr::left_join(dfCatchBySR.AllMonths,select(dfSR,SR=Rect,AreaKm2,Div))
+  dfCatchBySR.Q1 <- dplyr::left_join(dfCatchBySR.Q1,select(dfSR,SR=Rect,AreaKm2,Div))
+  dfCatchBySR.Q2 <- dplyr::left_join(dfCatchBySR.Q2,select(dfSR,SR=Rect,AreaKm2,Div))
+  dfCatchBySR.Q3 <- dplyr::left_join(dfCatchBySR.Q3,select(dfSR,SR=Rect,AreaKm2,Div))
+  dfCatchBySR.Q4 <- dplyr::left_join(dfCatchBySR.Q4,select(dfSR,SR=Rect,AreaKm2,Div))
+  
+  dfAllYears <- dplyr::bind_rows(dfAllYears,dfJulandAug)
+  dfAllYears.AllMonths <- dplyr::bind_rows(dfAllYears.AllMonths,dfCatchBySR.AllMonths)
+  dfAllYears.ByQ <- dplyr::bind_rows(dfAllYears.ByQ,
+                                     data.frame(Year=dfCatchBySR.Q1$Year,
+                                                Q=paste0("Q",rep(1,length(dfCatchBySR.Q1$Year))),
+                                                SR=dfCatchBySR.Q1$SR,
+                                                Lat=dfCatchBySR.Q1$Lat,
+                                                Lon=dfCatchBySR.Q1$Lon,
+                                                Tot=dfCatchBySR.Q1$Tot,
+                                                AreaKm2=dfCatchBySR.Q1$AreaKm2,
+                                                Div=dfCatchBySR.Q1$Div,
+                                                stringsAsFactors = FALSE))
+  dfAllYears.ByQ <- dplyr::bind_rows(dfAllYears.ByQ,
+                                     data.frame(Year=dfCatchBySR.Q2$Year,
+                                                Q=paste0("Q",rep(2,length(dfCatchBySR.Q2$Year))),
+                                                SR=dfCatchBySR.Q2$SR,
+                                                Lat=dfCatchBySR.Q2$Lat,
+                                                Lon=dfCatchBySR.Q2$Lon,
+                                                Tot=dfCatchBySR.Q2$Tot,
+                                                AreaKm2=dfCatchBySR.Q2$AreaKm2,
+                                                Div=dfCatchBySR.Q2$Div,
+                                                stringsAsFactors = FALSE))
+  dfAllYears.ByQ <- dplyr::bind_rows(dfAllYears.ByQ,
+                                     data.frame(Year=dfCatchBySR.Q3$Year,
+                                                Q=paste0("Q",rep(3,length(dfCatchBySR.Q3$Year))),
+                                                SR=dfCatchBySR.Q3$SR,
+                                                Lat=dfCatchBySR.Q3$Lat,
+                                                Lon=dfCatchBySR.Q3$Lon,
+                                                Tot=dfCatchBySR.Q3$Tot,
+                                                AreaKm2=dfCatchBySR.Q3$AreaKm2,
+                                                Div=dfCatchBySR.Q3$Div,
+                                                stringsAsFactors = FALSE))
+  dfAllYears.ByQ <- dplyr::bind_rows(dfAllYears.ByQ,
+                                     data.frame(Year=dfCatchBySR.Q4$Year,
+                                                Q=paste0("Q",rep(4,length(dfCatchBySR.Q4$Year))),
+                                                SR=dfCatchBySR.Q4$SR,
+                                                Lat=dfCatchBySR.Q4$Lat,
+                                                Lon=dfCatchBySR.Q4$Lon,
+                                                Tot=dfCatchBySR.Q4$Tot,
+                                                AreaKm2=dfCatchBySR.Q4$AreaKm2,
+                                                Div=dfCatchBySR.Q4$Div,
+                                                stringsAsFactors = FALSE))
+  
+}
+
+
+table(dfAllYears$Year)
+#unmatched rectangles - reporting issues
+table(dfAllYears[is.na(dfAllYears$Area),]$SR)
+table(dfAllYears[is.na(dfAllYears$Div),]$SR)
+
+dfAllYears.AllMonths[is.na(dfAllYears.AllMonths$Div),]
+
+#Seven.Colours <- rev(heat.colors(7))
+
+#all for over 1000
+#Catch.Bins <- c("1000t-2500t","2500t-5000t","5000t-7500t","7500t-10000t",">10000t")
+#Catch.Limits <- c(1000,2500,5000,7500,10000)
+
+#single country
+Catch.Bins <- c("<1t","1t-10t","1t-100t","100t-1000t","1000t-5000t","5000t-10000t",">10000t")
+Catch.Limits <- c(0,1,10,100,1000,5000,10000)
+
+Bin.Colours <- rev(heat.colors(length(Catch.Bins)))
+
+#plots
+for (y in yrs){
+  
+  xlim <- c(-36,30);ylim <- c(36,73)
+  
+  catchmap <- ggplot(map.df) +
+    coord_cartesian(xlim = xlim, ylim = ylim) +
+    geom_hline(yintercept=seq(34,76,by=0.5), linetype="solid", color = "grey") +
+    geom_vline(xintercept=seq(-42,32), linetype="solid", color = "grey") +
+    aes(long, lat, group=group) +
+    geom_path(color = "white") +
+    geom_polygon() +
+    theme_map()
+
+  #dfSR2Plot <- dplyr::filter(dfAllYears,Year==y)
+  #all months, rects with 1000t or more
+  #dfSR2Plot <- dplyr::filter(dfAllYears.AllMonths,Year==y & Tot>1000)
+  #all months
+  dfSR2Plot <- dplyr::filter(dfAllYears.AllMonths,Year==y)
+  
+  if (nrow(dfSR2Plot)>0) {
+
+    #create data frame with polygons for catch
+    dfPolys <- data.frame(SR=c(),Lat=c(),Lon=c(),Catch=c())
+
+    for (i in 1:nrow(dfSR2Plot)){
+      dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfSR2Plot$SR[i],Lat=dfSR2Plot$Lat[i]-0.25,Lon=dfSR2Plot$Lon[i]-0.5,
+                                                     Catch=fCatchBin(dfSR2Plot$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                     stringsAsFactors = FALSE))
+      dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfSR2Plot$SR[i],Lat=dfSR2Plot$Lat[i]-0.25,Lon=dfSR2Plot$Lon[i]+0.5,
+                                                     Catch=fCatchBin(dfSR2Plot$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                     stringsAsFactors = FALSE))
+      dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfSR2Plot$SR[i],Lat=dfSR2Plot$Lat[i]+0.25,Lon=dfSR2Plot$Lon[i]+0.5,
+                                                     Catch=fCatchBin(dfSR2Plot$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                     stringsAsFactors = FALSE))
+      dfPolys <- dplyr::bind_rows(dfPolys,data.frame(SR=dfSR2Plot$SR[i],Lat=dfSR2Plot$Lat[i]+0.25,Lon=dfSR2Plot$Lon[i]-0.5,
+                                                     Catch=fCatchBin(dfSR2Plot$Tot[i],Limits=Catch.Limits,Labels=Catch.Bins),
+                                                     stringsAsFactors = FALSE))
+    }
+
+    dfPolys$Catch <- factor(dfPolys$Catch,levels=Catch.Bins)
+
+    catchmap <- catchmap + geom_polygon(data=dfPolys,
+                                        aes(x=Lon,y=Lat,group=SR,fill=Catch)) +
+      scale_fill_manual(values = Bin.Colours, drop=FALSE)
+
+    catchmap <- catchmap + geom_polygon(data=map.df,
+                                        aes(long, lat, group=group))
+
+  }
+
+  catchmap <- catchmap + ggtitle(paste(y,"All SR, Norway"))
+    
+  catchmap <- catchmap + guides(fill=guide_legend(title=paste(y)))
+  
+  #fishing area
+  catchmap <- catchmap + annotate("text",x=xlim[1],y=ylim[2],hjust=0,
+                                  label=paste("Fishing Area = ",sum(dfSR2Plot$AreaKm2,na.rm=TRUE)/1e6, " million km2"))
+  #total catch
+  catchmap <- catchmap + annotate("text",x=xlim[1],y=ylim[2]-2,hjust=0,
+                                  label=paste("Total = ",sum(dfSR2Plot$Tot,na.rm=TRUE), " t"))
+  
+  ggsave(filename = file.path(".","Plots","WKIBPNEAMac",paste0("All_NO_",y,".png")),
+         plot = catchmap,
+         width = 8,
+         height = 5)
+
+}
+
+
+#all records
+dfFishingArea <- dfAllYears %>% 
+  group_by(Year) %>%
+  summarise(FishingArea=sum(AreaKm2,na.rm=TRUE)/1e6)
+
+dfFishingArea <- dplyr::left_join(dfFishingArea,
+                                  filter(dfAllYears,Tot>1) %>% 
+                                    group_by(Year) %>%
+                                    summarise(FishingArea_o1t=sum(AreaKm2,na.rm=TRUE)/1e6))
+
+dfFishingArea <- dplyr::left_join(dfFishingArea,
+                                  filter(dfAllYears,Tot>10) %>% 
+                                    group_by(Year) %>%
+                                    summarise(FishingArea_o10t=sum(AreaKm2,na.rm=TRUE)/1e6))
+
+dfFishingArea <- dplyr::left_join(dfFishingArea,
+                                  filter(dfAllYears,Tot>100) %>% 
+                                    group_by(Year) %>%
+                                    summarise(FishingArea_o100t=sum(AreaKm2,na.rm=TRUE)/1e6))
+
+dfFishingArea <- dplyr::left_join(dfFishingArea,
+                                  filter(dfAllYears,Tot>1000) %>% 
+                                    group_by(Year) %>%
+                                    summarise(FishingArea_o1000t=sum(AreaKm2,na.rm=TRUE)/1e6))
+
+
+#quick look
+plot(dfFishingArea$Year,dfFishingArea$FishingArea,xlab="Year",ylab="Area",ylim=c(0,3),type="l")
+lines(dfFishingArea$Year,dfFishingArea$FishingArea_o1t)
+lines(dfFishingArea$Year,dfFishingArea$FishingArea_o10t)
+lines(dfFishingArea$Year,dfFishingArea$FishingArea_o100t)
+lines(dfFishingArea$Year,dfFishingArea$FishingArea_o1000t)
+
+dfFA.Table <- xtable(select(dfFishingArea,Year,AllRects=FishingArea,
+                            Over1t=FishingArea_o1t,Over10t=FishingArea_o10t,
+                            Over100t=FishingArea_o100t,Over1000t=FishingArea_o1000t),
+                     digits=c(0,0,2,2,2,2,2))
+print(dfFA.Table, type="latex")
+
+
+#by division
+table(dfAllYears.AllMonths$Year)
+dfIIa <- dfAllYears.AllMonths %>%
+  filter(Div=="IIa") %>%
+  group_by(Year) %>%
+  summarise(TotIIa=sum(Tot))
+dfIVa <- dfAllYears.AllMonths %>%
+  filter(Div=="IVa") %>%
+  group_by(Year) %>%
+  summarise(TotIVa=sum(Tot))
+dfVIa <- dfAllYears.AllMonths %>%
+  filter(Div=="VIa") %>%
+  group_by(Year) %>%
+  summarise(TotVIa=sum(Tot))
+dfAll <- dfAllYears.AllMonths %>%
+  filter(!is.na(Div)) %>%
+  group_by(Year) %>%
+  summarise(Tot=sum(Tot))
+
+dfByDiv <- dplyr::bind_cols(dfAll,select(dfIIa,TotIIa))
+dfByDiv <- dplyr::bind_cols(dfByDiv,select(dfIVa,TotIVa))
+dfByDiv <- dplyr::bind_cols(dfByDiv,select(dfVIa,TotVIa))
+dfByDiv$PropIIa <- dfByDiv$TotIIa/dfByDiv$Tot
+dfByDiv$PropIVa <- dfByDiv$TotIVa/dfByDiv$Tot
+dfByDiv$PropVIa <- dfByDiv$TotVIa/dfByDiv$Tot
+
+dfByDiv.Table <- xtable(dfByDiv,digits=c(0,0,0,0,0,0,2,2,2))
+print(dfByDiv.Table, type="latex")
+
+#quarterly report
+dfT <- dfAllYears.ByQ
+dfAllYears.ByQ <- tidyr::spread(dfAllYears.ByQ,key='Q',value='Tot',fill=0)
+dfAllYears.ByQ <- dfAllYears.ByQ %>% dplyr::mutate(Annual = Q1+Q2+Q3+Q4)
+
+#check annuals 
+dfByQ <- dplyr::group_by(dfAllYears.ByQ,Year) %>% 
+  summarise(Tot=sum(Annual), Q1=sum(Q1), Q2=sum(Q2), Q3=sum(Q3), Q4=sum(Q4)) %>%
+  mutate(PQ1=Q1/Tot,PQ2=Q2/Tot,PQ3=Q3/Tot,PQ4=Q4/Tot)
+
+dfByQ.Table <- xtable(select(dfByQ,Year,Q1=PQ1,Q2=PQ2,Q3=PQ3,Q4=PQ4),digits=c(0,0,2,2,2,2))
+print(dfByQ.Table, type="latex")
+
 
 #15th January - WKIBPNEAMac
-#migrating to ggplot maps and including plot of catches scanned for tags and tag return numbers
 
+#migrating to ggplot maps and including plot of catches scanned for tags and tag return numbers
 eco <- subset(read.csv(file=file.path(".","..","Data","RData","iarc.eco.2008.csv"), header = TRUE, sep=","), iso2 != "EU27")
 map <- readShapeSpatial(fn=file.path(".","..","Data","maps","countries//CNTR_RG_60M_2006"), proj4string = CRS("+proj=longlat"))
 map <- reshape::rename(map, c(CNTR_ID = "iso2")) #; summary(map)
@@ -342,10 +1512,6 @@ for (cry in c('DK')) {
   } #end year
   
 } #end country
-
-
-
-
 
 
 #9th January - WKIBPNEAMac
@@ -1015,7 +2181,7 @@ y <- 2017
 #jpeg(filename = paste0(".\\Plots\\Stockbooks\\2018\\WG",y,"_HOM_CBySR.jpg"),width=1200, height=1600, quality=100)
 png(filename = paste0(".\\Plots\\Stockbooks\\2018\\WG",y,"_HOM_CBySR.png"),width=1200, height=1600)
 
-#basebap
+#basemap
 fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
 
 #annual data
@@ -1078,7 +2244,7 @@ dev.off()
 
 #Blue Whiting - all fleets
 y <- 2017
-png(filename = paste0(".\\Plots\\Stockbooks\\2018\\WG",y,"_WHB_CBySR.png"),width=1200, height=1600)
+png(filename = paste0(".\\Plots\\Stockbooks\\2019\\WG",y,"_WHB_CBySR.png"),width=1200, height=1600)
 
 #basebap
 fPlotBaseMap(xlim=c(-17,10),ylim=c(37,70),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
