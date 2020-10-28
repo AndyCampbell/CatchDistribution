@@ -4,6 +4,8 @@
 #this file is generated from the exchange sheets by script ExtractCatchBySR.R
 
 #Change Log
+#28/10/2020 - Mackerel distribution workshop, looking at IE in particular
+#17/10/2020 - Coastal States - BW catch dist
 #01/10/2020 - HOM Stockbook plots
 #29/09/2020 - MAC stockbook maps
 #28/09/2020 - BW stockbook maps
@@ -32,6 +34,7 @@ library(reshape)
 library(dplyr)
 library(ggpubr)     #arranging ggplots on a grid
 library(xtable)     #latex tables
+library(tools)
 
 gpclibPermit()
 
@@ -61,6 +64,125 @@ map@data$id <- rownames(map@data)
 map.points <- fortify(map, region = "id")
 map.df <- dplyr::inner_join(map.points, map@data, by = "id")
 map.df <- dplyr::inner_join(map.df, eco, by = "iso2")
+
+
+#EEZ - slow code, objects saved to RData file
+# path.eez.world.v11 <- file.path(".","World_EEZ_v11_20191118")
+# fnam.eez.world.v11 <- "eez_v11.shp"
+# 
+# eez.world.v11 <- rgdal::readOGR(dsn = path.eez.world.v11, 
+#                         layer = file_path_sans_ext(fnam.eez.world.v11))
+# 
+# dat.eez.irl <- eez.world.v11[eez.world.v11@data$TERRITORY1 == "Ireland", ]
+# dat.eez.UK <- eez.world.v11[eez.world.v11@data$TERRITORY1 == "United Kingdom", ]
+# dat.eez.FR <- eez.world.v11[eez.world.v11@data$TERRITORY1 == "France", ]
+# dat.eez.FO <- eez.world.v11[eez.world.v11@data$TERRITORY1 == "Faeroe", ]
+# dat.eez.IC <- eez.world.v11[eez.world.v11@data$TERRITORY1 == "Iceland", ]
+# dat.eez.NO <- eez.world.v11[eez.world.v11@data$TERRITORY1 == "Norway", ]
+# dat.eez.GL <- eez.world.v11[eez.world.v11@data$TERRITORY1 == "Greenland", ]
+# 
+# fortify.shape <- function(x){
+#   x@data$id <- rownames(x@data)
+#   x.f <- ggplot2::fortify(x, region = "id")
+#   x.join <- dplyr::inner_join(x.f, x@data, by = "id")
+# }
+# 
+# dat.eez.irl <- fortify.shape(dat.eez.irl) 
+# dat.eez.UK <- fortify.shape(dat.eez.UK) 
+# dat.eez.FR <- fortify.shape(dat.eez.FR) 
+# dat.eez.FO <- fortify.shape(dat.eez.FO) 
+# dat.eez.IC <- fortify.shape(dat.eez.IC) 
+# dat.eez.GL <- fortify.shape(dat.eez.GL) 
+# dat.eez.NO <- fortify.shape(dat.eez.NO) 
+# 
+# #save eez objects
+# save(list=c("eez.world.v11","dat.eez.irl","dat.eez.UK","dat.eez.FR","dat.eez.FO","dat.eez.IC","dat.eez.GL","dat.eez.NO"),
+#      file = ".//..//Data//RData//EEZ.rda")
+load(".//..//Data//RData//EEZ.rda")
+
+#IMR Mackerel workshop collaboration follow up
+
+for (y in seq(2010,2019)) {
+  data.y <- y
+  
+  #Irish catch
+  png(filename = file.path(getwd(),"Plots","IMR Mac Workshop",paste0("IE",data.y,"_MAC_CBySR.png")),width=1200, height=1600)
+  
+  #basemap
+  fPlotBaseMap(xlim=c(-15,6),ylim=c(47,64),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=T,SRNames=T,ICES=T)
+  
+  #annual data
+  dfSub <- fSubset(src = ".\\Data\\mac.27.neaWGCatchBySR.wgwide2020.csv",y = data.y, ptype = "Y", pnum = data.y, Cry = "IRL")
+  
+  range(dfSub$TOT)
+  
+  fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+  fPlotDist(dfSub,min=1,max=10,fill.col="lightpink",border.col="lightpink")
+  fPlotDist(dfSub,min=10,max=100,fill.col="lightpink3",border.col="lightpink3")
+  fPlotDist(dfSub,min=100,max=1000,fill.col="firebrick2",border.col="firebrick2")
+  fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+  
+  fPlotBaseMap(xlim=c(-15,6),ylim=c(47,64),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=T,SRNames=T,ICES=T)
+  
+  #SR names for rectangles with catch
+  for (r in dfSub$SR){
+    if ((sum(dfSR$Rect==r)) == 1){
+    text(x=dfSR$MidLon[dfSR$Rect==r],
+                           y=dfSR$MidLat[dfSR$Rect==r],
+                           labels=paste0(r,"\n",ceiling(dfSub$TOT[dfSub$SR==r])),adj=c(0.5,0.5))}
+  }
+  
+  text(-14,64,data.y,cex=4)
+  
+  dev.off()
+}
+
+
+
+
+
+
+#17/10/2020 Coastal States Blue Whiting Dist investigations
+for (y in seq(2016,2019)) {
+  data.y <- y
+  rep.y <- 2020
+  
+  png(filename = file.path(getwd(),"Plots","Coastal States",rep.y,paste0("WG",data.y,"_BW_CBySR.png")),width=1200, height=1600)
+  
+  #basemap
+  fPlotBaseMap(xlim=c(-19,10),ylim=c(37,70),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+  
+  #annual data
+  dfSub <- fSubset(src = ".\\Data\\whb.27.1-91214WGCatchBySR.wgwide2020.csv",y = data.y, ptype = "Y", pnum = data.y)
+  
+  range(dfSub$TOT)
+  
+  fPlotDist(dfSub,min=0,max=10,fill.col="antiquewhite",border.col="antiquewhite")
+  fPlotDist(dfSub,min=10,max=100,fill.col="lightpink",border.col="lightpink")
+  fPlotDist(dfSub,min=100,max=1000,fill.col="lightpink3",border.col="lightpink3")
+  fPlotDist(dfSub,min=1000,max=10000,fill.col="firebrick2",border.col="firebrick2")
+  fPlotDist(dfSub,min=10000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+
+  lines(x=dat.eez.irl$long[dat.eez.irl$hole==FALSE],y=dat.eez.irl$lat[dat.eez.irl$hole==FALSE],col="black")
+  lines(x=dat.eez.UK$long[dat.eez.UK$hole==FALSE],y=dat.eez.UK$lat[dat.eez.UK$hole==FALSE],col="black")
+  lines(x=dat.eez.FR$long[dat.eez.FR$hole==FALSE],y=dat.eez.FR$lat[dat.eez.FR$hole==FALSE],col="black")
+  lines(x=dat.eez.FO$long[dat.eez.FO$hole==FALSE],y=dat.eez.FO$lat[dat.eez.FO$hole==FALSE],col="black")
+  lines(x=dat.eez.IC$long[dat.eez.IC$hole==FALSE],y=dat.eez.IC$lat[dat.eez.IC$hole==FALSE],col="black")
+  lines(x=dat.eez.GL$long[dat.eez.GL$hole==FALSE],y=dat.eez.GL$lat[dat.eez.GL$hole==FALSE],col="black")
+  lines(x=dat.eez.NO$long[dat.eez.NO$hole==FALSE],y=dat.eez.NO$lat[dat.eez.NO$hole==FALSE],col="black")
+  
+  fPlotBaseMap(xlim=c(-19,10),ylim=c(37,70),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+  
+  legend(x = "bottomright",
+         legend = c("<10t","10t to 100t","100t to 1000t","1000t to 10000t",">10000t"),
+         fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+         border = "black",
+         cex = 4,
+         title = paste0("Catch ",data.y))
+  
+  dev.off()
+}
+
 
 
 #01/10/2020 HOM Stockbook plots

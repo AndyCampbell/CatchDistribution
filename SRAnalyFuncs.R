@@ -18,7 +18,7 @@ fPlotDist <- function(dfSub, min, max, fill.col, border.col, avg=FALSE){
 
 
 fPlotBaseMap <- function(xlim=c(-12,8),ylim=c(42,65),xaxis=TRUE,xlabs=TRUE,yaxis=TRUE,
-                         ylabs=TRUE,refresh=FALSE,SR=TRUE,ICES=TRUE){
+                         ylabs=TRUE,refresh=FALSE,SR=TRUE,SRNames=FALSE,ICES=TRUE){
   
   #plots coast, SR boundaries, 
   #ICES area boundaries (ICES=TRUE)
@@ -39,6 +39,9 @@ fPlotBaseMap <- function(xlim=c(-12,8),ylim=c(42,65),xaxis=TRUE,xlabs=TRUE,yaxis
     abline(h=seq(30,80,by=0.5),col="grey")
     abline(v=seq(-40,30,by=1),col="grey")
   }
+  
+  #text in Stat Rect?
+  #if (SRNames) {text(x=-3.5,y=59.75,labels=c("48E6"),adj=c(0.5,0.5))}
   
   for (i in 1:length(coast)){
     if (!is.null(coast[[i]])){
@@ -152,7 +155,8 @@ fSubset <- function(src = ".\\Data\\WGCatchBySR.csv", y, ptype, pnum, Cry){
   quarters <- c(1,1,1,2,2,2,3,3,3,4,4,4)
   
   #read in the data
-  df <- read.table(file = src, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+  #df <- read.table(file = src, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+  df <- read.table(file = src, header = TRUE, sep = ",", stringsAsFactors = FALSE, strip.white = TRUE)
   names(df) <- toupper(names(df))
   
   names(df)[names(df)=="RECT"]<-"SR"
