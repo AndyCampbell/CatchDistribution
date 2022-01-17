@@ -192,7 +192,7 @@ fSubset <- function(src = ".\\Data\\WGCatchBySR.csv", y, ptype, pnum, Cry){
   } else if (toupper(ptype) == "Q") {
     #quarterly
 
-    df <- filter(df, (PTYPE=="Q" & PNUM %in% pnum) | (PTYPE=="M" & PNUM %in% unlist(months[paste0('Q',pnum)])))
+    df <- filter(df, (toupper(PTYPE)=="Q" & PNUM %in% pnum) | (toupper(PTYPE)=="M" & PNUM %in% unlist(months[paste0('Q',pnum)])))
 
     #data frame to return
     df <- select(group_by(df,YEAR,SR,LAT,LON),YEAR,SR,LAT,LON,CATCH) %>% summarise(TOT=sum(CATCH))

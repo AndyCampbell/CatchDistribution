@@ -4,6 +4,10 @@
 #this file is generated from the exchange sheets by script ExtractCatchBySR.R
 
 #Change Log
+#17/01/2022 - WHB data for Hans
+#06/10/2021 - Boarfish maps for Stockbook
+#27/09/2021 - BW. MAC, HOM Stockbook maps
+#01/06/2021 - maps for RCG ISSG (Freezer sampling) presentation
 #28/10/2020 - Mackerel distribution workshop, looking at IE in particular
 #17/10/2020 - Coastal States - BW catch dist
 #01/10/2020 - HOM Stockbook plots
@@ -21,6 +25,7 @@
 
 rm(list=ls())
 gc()
+try(dev.off(),silent=TRUE)
 
 library(dplyr)
 library(geosphere)
@@ -42,6 +47,7 @@ load(".//..//Data//RData//coast.rda")
 load(".//..//Data//RData//NEAFC.rda")
 load(".//..//Data//RData//SR.rda")
 dfSR$SR <- levels(dfSR$Rect)[dfSR$Rect]     #SR as a character
+load(".//..//Data//RData//EEZ.rda")
 
 source("SRAnalyFuncs.R")
 
@@ -64,6 +70,376 @@ map@data$id <- rownames(map@data)
 map.points <- fortify(map, region = "id")
 map.df <- dplyr::inner_join(map.points, map@data, by = "id")
 map.df <- dplyr::inner_join(map.df, eco, by = "iso2")
+
+
+#06/10/2021 - Boarfish
+y <- 2020
+png(filename = paste0(".\\Plots\\Stockbooks\\",2021,"\\IE",y,"_BOC_CBySR.png"),width=1200, height=1600)
+
+fPlotBaseMap(xlim=c(-19,7),ylim=c(45,63),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+dfSub <- fSubset(src = ".\\Data\\boc.27.6-8_CBySR.csv",y = y, ptype = "Y", pnum = y)
+
+range(dfSub$Tot)
+
+fPlotDist(dfSub,min=0,max=10,fill.col="lightpink",border.col="lightpink")
+fPlotDist(dfSub,min=10,max=100,fill.col="lightpink3",border.col="lightpink3")
+fPlotDist(dfSub,min=100,max=1000,fill.col="firebrick2",border.col="firebrick2")
+fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+
+fPlotBaseMap(xlim=c(-19,7),ylim=c(45,63),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<10t","10t to 100t","100t to 1000t",">1000t"),
+       fill = c("lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = "Boarfish Catch")
+dev.off()
+
+#mean 2018-2020
+
+#06/10/2021
+
+png(filename = paste0(".\\Plots\\Stockbooks\\",2021,"\\IE","_3yr","_BOC_CBySR.png"),width=1200, height=1600)
+
+fPlotBaseMap(xlim=c(-19,7),ylim=c(45,63),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+dfSub <- fSubset(src = ".\\Data\\boc.27.6-8_CBySR.csv",y = seq(2018,2020), ptype = "Y")
+
+fPlotDist(dfSub,min=0,max=10,fill.col="lightpink",border.col="lightpink",avg=TRUE)
+fPlotDist(dfSub,min=10,max=100,fill.col="lightpink3",border.col="lightpink3",avg=TRUE)
+fPlotDist(dfSub,min=100,max=1000,fill.col="firebrick2",border.col="firebrick2",avg=TRUE)
+fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4",avg=TRUE)
+
+fPlotBaseMap(xlim=c(-19,7),ylim=c(45,63),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<10t","10t to 100t","100t to 1000t",">1000t"),
+       fill = c("lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = "Boarfish Catch")
+dev.off()
+
+
+#27/09/2021
+#Blue Whiting Stockbook plots
+#whb/WGWIDE2020_CatchesByRect_WHB.xlsx retreived from WGWIDE2020 Sharepoint. Saved into csv format from Excel
+
+#all fleets
+y <- 2020 #data year
+png(filename = paste0(".\\Plots\\Stockbooks\\2021\\WG",y,"_WHB_CBySR.png"),width=1200, height=1600)
+
+#baseMap
+fPlotBaseMap(xlim=c(-19,10),ylim=c(37,70),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+#annual data
+dfSub <- fSubset(src = ".\\Data\\whb.27.1-91214WGCatchBySR.wgwide2021.csv",y = y, ptype = "Y", pnum = y)
+
+range(dfSub$TOT)
+
+fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+fPlotDist(dfSub,min=1,max=100,fill.col="lightpink",border.col="lightpink")
+fPlotDist(dfSub,min=100,max=1000,fill.col="lightpink3",border.col="lightpink3")
+fPlotDist(dfSub,min=1000,max=15000,fill.col="firebrick2",border.col="firebrick2")
+fPlotDist(dfSub,min=15000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+
+fPlotBaseMap(xlim=c(-19,10),ylim=c(37,70),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<1t","1t to 100t","100t to 1000t","1000t to 15000t",">15000t"),
+       fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("Catch ",y))
+
+dev.off()
+
+
+#Blue Whiting - by country
+#crys <- c("DK","FO","FR","DE","IE","IC","LT","NL","NO","PT","RU","UKS","SE","ES","UKE")
+crys <- c("DEU","DNK","ESP","FRA","FRO","GBR.EW","GBR.N","GBR.S","GRL","IRL","ISL","NLD","NOR","POL","PRT","RUS","SWE")
+
+for (c in crys) {
+  
+  png(filename = paste0(".\\Plots\\Stockbooks\\2021\\",c,y,"_WHB_CBySR_IE_EEZ.png"),width=1200, height=1600)
+  
+  #basebap
+  fPlotBaseMap(xlim=c(-19,10),ylim=c(37,70),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+  
+  #annual data
+  dfSub <- fSubset(src = ".\\Data\\whb.27.1-91214WGCatchBySR.wgwide2021.csv",y = y, ptype = "Y", pnum = y, Cry=c)
+  
+  range(dfSub$TOT)
+  
+  fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+  fPlotDist(dfSub,min=1,max=100,fill.col="lightpink",border.col="lightpink")
+  fPlotDist(dfSub,min=100,max=1000,fill.col="lightpink3",border.col="lightpink3")
+  fPlotDist(dfSub,min=1000,max=15000,fill.col="firebrick2",border.col="firebrick2")
+  fPlotDist(dfSub,min=15000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+  
+  fPlotBaseMap(xlim=c(-19,10),ylim=c(37,70),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+  lines(x=dat.eez.irl$long[dat.eez.irl$hole==FALSE],y=dat.eez.irl$lat[dat.eez.irl$hole==FALSE],col="black")
+  
+  legend(x = "bottomright",
+         legend = c("<1t","1t to 100t","100t to 1000t","1000t to 15000t",">15000t"),
+         fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+         border = "black",
+         cex = 4,
+         title = paste0(c," Catch ",y))
+  
+  dev.off()
+  
+}
+
+
+#Mackerel Stockbook plots
+#plot of catch distribution for entire year for 1) all nations 2) Ireland only
+#no legend, no grid lines, no axis notations
+
+#data year, reporting year
+data.y <- 2020; rep.y <- 2021
+
+#jpeg(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\Total",data.y,"_MAC_CBySR.jpg"),width=1200, height=1600, quality=100)
+png(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\Total",data.y,"_MAC_CBySR.png"),width=1200, height=1600)
+
+dfSR <- fSubset(y = data.y, ptype = "Y", pnum = data.y)
+
+fPlotBaseMap(xlim=c(-32,16),ylim=c(36,72),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+with(filter(dfSR, TOT<100 & TOT>=1),
+     for (i in 1:nrow(filter(dfSR, TOT<100))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="lightpink", border="lightpink")
+     }
+)
+
+with(filter(dfSR, TOT<1000 & TOT>=100),
+     for (i in 1:nrow(filter(dfSR, TOT<1000 & TOT>=100))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="lightpink3", border="lightpink3")
+     }
+)
+
+with(filter(dfSR, TOT<10000 & TOT>=1000),
+     for (i in 1:nrow(filter(dfSR, TOT<10000 & TOT>=1000))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="firebrick2", border="firebrick2")
+     }
+)
+
+with(filter(dfSR, TOT>=10000),
+     for (i in 1:nrow(filter(dfSR, TOT>=10000))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="firebrick4", border="firebrick4")
+     }
+)
+
+fPlotBaseMap(xlim=c(-32,16),ylim=c(36,72),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+
+legend(x = "bottomright",
+       legend = c("<100t","100t to 1000t","1000t to 10000t",">15000t"),
+       fill = c("lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("Catch ",data.y))
+
+dev.off()
+
+#Irish only
+
+#jpeg(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\IE",data.y,"_MAC_CBySR.jpg"),width=1200, height=1600, quality=100)
+png(filename = paste0(".\\Plots\\Stockbooks\\",rep.y,"\\IE",data.y,"_MAC_CBySR.png"),width=1200, height=1600)
+
+dfSR <- fSubset(y = data.y, ptype = "Y", pnum = data.y, Cry = 'IE')
+
+fPlotBaseMap(xlim=c(-32,16),ylim=c(36,72),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+with(filter(dfSR, TOT<100 & TOT>=1),
+     for (i in 1:nrow(filter(dfSR, TOT<100))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="lightpink", border="lightpink")
+     }
+)
+
+with(filter(dfSR, TOT<1000 & TOT>=100),
+     for (i in 1:nrow(filter(dfSR, TOT<1000 & TOT>=100))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="lightpink3", border="lightpink3")
+     }
+)
+
+with(filter(dfSR, TOT<10000 & TOT>=1000),
+     for (i in 1:nrow(filter(dfSR, TOT<10000 & TOT>=1000))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="firebrick2", border="firebrick2")
+     }
+)
+
+with(filter(dfSR, TOT>=10000),
+     for (i in 1:nrow(filter(dfSR, TOT>=10000))){
+       polygon(c(LON[i]-0.5,LON[i]+0.5,LON[i]+0.5,LON[i]-0.5,LON[i]-0.5),
+               c(LAT[i]-0.25,LAT[i]-0.25,LAT[i]+0.25,LAT[i]+0.25,LAT[i]-0.25),
+               col="firebrick4", border="firebrick4")
+     }
+)
+
+fPlotBaseMap(xlim=c(-32,16),ylim=c(36,72),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<100t","100t to 1000t","1000t to 10000t",">15000t"),
+       fill = c("lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("IRL Catch ",data.y))
+
+dev.off()
+
+
+#Horse Mackerel
+data.y <- 2020
+rep.y <- 2021
+
+png(filename = file.path(getwd(),"Plots","Stockbooks",rep.y,paste0("WG",data.y,"_HOM_CBySR.png")),width=1200, height=1600)
+
+#basemap
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+#annual data
+dfSub <- fSubset(src = ".\\Data\\hom.27WGCatchBySR.csv",y = data.y, ptype = "Y", pnum = data.y)
+
+dfSub <- dfSub[!is.na(dfSub$LAT),]
+dfSub <- dfSub[!is.na(dfSub$LON),]
+dfSub <- dfSub[dfSub$TOT>0,]
+
+range(dfSub$TOT)
+
+fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+fPlotDist(dfSub,min=1,max=10,fill.col="lightpink",border.col="lightpink")
+fPlotDist(dfSub,min=10,max=100,fill.col="lightpink3",border.col="lightpink3")
+fPlotDist(dfSub,min=100,max=1000,fill.col="firebrick2",border.col="firebrick2")
+fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<1t","1t to 10t","10t to 100t","100t to 1000t",">1000t"),
+       fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("Catch ",data.y))
+
+dev.off()
+
+
+#Irish catch
+png(filename = file.path(getwd(),"Plots","Stockbooks",rep.y,paste0("IE",data.y,"_HOM_CBySR.png")),width=1200, height=1600)
+
+#basebap
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+#annual data
+dfSub <- fSubset(src = ".\\Data\\hom.27WGCatchBySR.csv",y = data.y, ptype = "Y", pnum = data.y, Cry='IRL')
+
+range(dfSub$TOT)
+
+fPlotDist(dfSub,min=0,max=1,fill.col="antiquewhite",border.col="antiquewhite")
+fPlotDist(dfSub,min=1,max=10,fill.col="lightpink",border.col="lightpink")
+fPlotDist(dfSub,min=10,max=100,fill.col="lightpink3",border.col="lightpink3")
+fPlotDist(dfSub,min=100,max=1000,fill.col="firebrick2",border.col="firebrick2")
+fPlotDist(dfSub,min=1000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+
+fPlotBaseMap(xlim=c(-15,10),ylim=c(37,66),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
+
+legend(x = "bottomright",
+       legend = c("<1t","1t to 10t","10t to 100t","100t to 1000t",">1000t"),
+       fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+       border = "black",
+       cex = 4,
+       title = paste0("IRL Catch ",data.y))
+
+dev.off()
+
+
+
+#end 27/09/2021
+
+
+
+
+#01/06/2021
+#Freezer catches (NL,DE,UKE) of mackerel/bw/hom for RCG ISSG
+#uncomment below as required for annual/monthly/species of interest
+for (y in seq(2014,2018)) {
+  
+  data.y <- y
+  rep.y <- 2021
+  
+  #png(filename = file.path(getwd(),"Plots","RCG",paste0("Freezers",data.y,"_Mac_CBySR.png")),width=1200, height=1600)
+  #png(filename = file.path(getwd(),"Plots","RCG",paste0("Freezers",data.y,"_Mac_CBySR_Q4.png")),width=1200, height=1600)
+
+  #png(filename = file.path(getwd(),"Plots","RCG",paste0("Freezers",data.y,"_BW_CBySR.png")),width=1200, height=1600)
+  #png(filename = file.path(getwd(),"Plots","RCG",paste0("Freezers",data.y,"_BW_CBySR_Q4.png")),width=1200, height=1600)
+  
+  #png(filename = file.path(getwd(),"Plots","RCG",paste0("Freezers",data.y,"_HOM_CBySR.png")),width=1200, height=1600)
+  #png(filename = file.path(getwd(),"Plots","RCG",paste0("Freezers",data.y,"_HOM_CBySR_Q4.png")),width=1200, height=1600)
+  
+  #herring file - no data on north sea?
+  #png(filename = file.path(getwd(),"Plots","RCG",paste0("Freezers",data.y,"_HER_CBySR.png")),width=1200, height=1600)
+  #png(filename = file.path(getwd(),"Plots","RCG",paste0("Freezers",data.y,"_HOM_CBySR_Q4.png")),width=1200, height=1600)
+  
+    
+  #basemap
+  fPlotBaseMap(xlim=c(-19,10),ylim=c(37,70),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=T)
+  
+  #dfSub <- fSubset(src = ".\\Data\\mac.27.neaWGCatchBySR.wgwide2020.csv",y = data.y, ptype = "Y", pnum = data.y, Cry = c("DEU","NLD","GBR.E"))
+  #dfSub <- fSubset(src = ".\\Data\\mac.27.neaWGCatchBySR.wgwide2020.csv",y = data.y, ptype = "Q", pnum = 4, Cry = c("DEU","NLD","GBR.E"))
+
+  #dfSub <- fSubset(src = ".\\Data\\whb.27.1-91214WGCatchBySR.wgwide2020.csv",y = data.y, ptype = "Y", pnum = data.y, Cry = c("DEU","NLD","GBR.E"))
+  #dfSub <- fSubset(src = ".\\Data\\whb.27.1-91214WGCatchBySR.wgwide2020.csv",y = data.y, ptype = "Q", pnum = 4, Cry = c("DEU","NLD","GBR.E"))
+  
+  #dfSub <- fSubset(src = ".\\Data\\hom.WGCatchBySR.wgwide.2020.csv",y = data.y, ptype = "Y", pnum = data.y, Cry = c("DEU","NLD","GBR.E"))
+  #dfSub <- fSubset(src = ".\\Data\\hom.WGCatchBySR.wgwide.2020.csv",y = data.y, ptype = "Q", pnum = 4, Cry = c("DEU","NLD","GBR.E"))
+
+  #dfSub <- fSubset(src = ".\\Data\\her.WGCatchBySR.wgwide.2020.csv",y = data.y, ptype = "Y", pnum = data.y, Cry = c("DEU","NLD","GBR.E"))
+  #dfSub <- fSubset(src = ".\\Data\\hom.WGCatchBySR.wgwide.2020.csv",y = data.y, ptype = "Q", pnum = 4, Cry = c("DEU","NLD","GBR.E"))
+  
+  range(dfSub$TOT)
+  
+  fPlotDist(dfSub,min=0,max=10,fill.col="antiquewhite",border.col="antiquewhite")
+  fPlotDist(dfSub,min=10,max=100,fill.col="lightpink",border.col="lightpink")
+  fPlotDist(dfSub,min=100,max=1000,fill.col="lightpink3",border.col="lightpink3")
+  fPlotDist(dfSub,min=1000,max=10000,fill.col="firebrick2",border.col="firebrick2")
+  fPlotDist(dfSub,min=10000,max=1e10,fill.col="firebrick4",border.col="firebrick4")
+  
+  #lines(x=dat.eez.irl$long[dat.eez.irl$hole==FALSE],y=dat.eez.irl$lat[dat.eez.irl$hole==FALSE],col="black")
+  #lines(x=dat.eez.UK$long[dat.eez.UK$hole==FALSE],y=dat.eez.UK$lat[dat.eez.UK$hole==FALSE],col="black")
+  #lines(x=dat.eez.FR$long[dat.eez.FR$hole==FALSE],y=dat.eez.FR$lat[dat.eez.FR$hole==FALSE],col="black")
+  #lines(x=dat.eez.FO$long[dat.eez.FO$hole==FALSE],y=dat.eez.FO$lat[dat.eez.FO$hole==FALSE],col="black")
+  #lines(x=dat.eez.IC$long[dat.eez.IC$hole==FALSE],y=dat.eez.IC$lat[dat.eez.IC$hole==FALSE],col="black")
+  #lines(x=dat.eez.GL$long[dat.eez.GL$hole==FALSE],y=dat.eez.GL$lat[dat.eez.GL$hole==FALSE],col="black")
+  #lines(x=dat.eez.NO$long[dat.eez.NO$hole==FALSE],y=dat.eez.NO$lat[dat.eez.NO$hole==FALSE],col="black")
+  
+  fPlotBaseMap(xlim=c(-19,10),ylim=c(37,70),refresh=TRUE,xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=T)
+  
+  legend(x = "bottomright",
+         legend = c("<10t","10t to 100t","100t to 1000t","1000t to 10000t",">10000t"),
+         fill = c("antiquewhite","lightpink","lightpink3","firebrick2","firebrick4"),
+         border = "black",
+         cex = 4,
+         title = paste0("Catch ",data.y))
+  
+  dev.off()
+}
+
 
 
 #EEZ - slow code, objects saved to RData file
@@ -100,19 +476,56 @@ map.df <- dplyr::inner_join(map.df, eco, by = "iso2")
 #      file = ".//..//Data//RData//EEZ.rda")
 load(".//..//Data//RData//EEZ.rda")
 
+#samples by SR - an output from the 4SforPelagics RProject
+load("C://Analysis//4SforPelagics//RData//MacSamplesBySR.RData")
+
 #IMR Mackerel workshop collaboration follow up
 
-for (y in seq(2010,2019)) {
+#for (y in seq(2000,2019)) {
+for (y in seq(2011,2019)) {
+    
   data.y <- y
   
   #Irish catch
-  png(filename = file.path(getwd(),"Plots","IMR Mac Workshop",paste0("IE",data.y,"_MAC_CBySR.png")),width=1200, height=1600)
+  #png(filename = file.path(getwd(),"Plots","IMR Mac Workshop",paste0("IE",data.y,"_MAC_CBySR.png")),width=1200, height=1600)
+  png(filename = file.path(getwd(),"Plots","IMR Mac Workshop",paste0("IE_",data.y-1,"-",data.y,"_MAC_CBySR.png")),width=1200, height=1600)
   
   #basemap
   fPlotBaseMap(xlim=c(-15,6),ylim=c(47,64),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=T,SRNames=T,ICES=T)
   
   #annual data
-  dfSub <- fSubset(src = ".\\Data\\mac.27.neaWGCatchBySR.wgwide2020.csv",y = data.y, ptype = "Y", pnum = data.y, Cry = "IRL")
+  #dfSub <- fSubset(src = ".\\Data\\mac.27.neaWGCatchBySR.wgwide2020.csv",y = data.y, ptype = "Y", pnum = data.y, Cry = "IRL")
+  #really, we want to look at the winter period i.e. Q3/4 for y-1 and Q1/2 for y
+  dfSub <- dplyr::bind_rows(
+    dplyr::left_join(
+      fSubset(src = ".\\Data\\mac.27.neaWGCatchBySR.wgwide2020.csv",y = data.y-1, ptype = "Q", pnum = c(3,4), Cry = "IRL"),
+      dfSamplesBySR %>%
+        filter(SampleYear==data.y-1 & SampleQuarter %in% c(3,4)) %>%
+        group_by(SampleYear,SR) %>%
+        summarise(Samples=n()),
+      by=c("SR"="SR","YEAR"="SampleYear")) %>%
+      tidyr::replace_na(list(Samples=0)),
+    dplyr::left_join(
+      fSubset(src = ".\\Data\\mac.27.neaWGCatchBySR.wgwide2020.csv",y = data.y, ptype = "Q", pnum = c(1,2), Cry = "IRL"),
+      dfSamplesBySR %>%
+        filter(SampleYear==data.y & SampleQuarter %in% c(1,2)) %>%
+        group_by(SampleYear,SR) %>%
+        summarise(Samples=n()),
+      by=c("SR"="SR","YEAR"="SampleYear")) %>%
+      tidyr::replace_na(list(Samples=0))
+  ) %>%
+    group_by(SR,LAT,LON) %>%
+    summarise(TOT=sum(TOT),Samples=sum(Samples))
+               
+  
+  #append information on number of samples
+  # dfSub <- dplyr::left_join(dfSub,
+  #                           dfSamplesBySR %>%
+  #                             filter(SampleYear==data.y-1 & SampleQuarter %in% c(3,4)) %>%
+  #                             group_by(SampleYear,SR) %>%
+  #                             summarise(Samples=n()),
+  #                           by=c("SR"="SR","YEAR"="SampleYear")) %>%
+  #   tidyr::replace_na(list(Samples=0))
   
   range(dfSub$TOT)
   
@@ -128,11 +541,13 @@ for (y in seq(2010,2019)) {
   for (r in dfSub$SR){
     if ((sum(dfSR$Rect==r)) == 1){
     text(x=dfSR$MidLon[dfSR$Rect==r],
-                           y=dfSR$MidLat[dfSR$Rect==r],
-                           labels=paste0(r,"\n",ceiling(dfSub$TOT[dfSub$SR==r])),adj=c(0.5,0.5))}
+         y=dfSR$MidLat[dfSR$Rect==r],
+         labels=paste0(r,"\n",ceiling(dfSub$TOT[dfSub$SR==r]),"\n",
+                       ifelse(dfSub$Samples[dfSub$SR==r]>0,dfSub$Samples[dfSub$SR==r],"")),
+                       adj=c(0.5,0.5),cex=0.75)}
   }
   
-  text(-14,64,data.y,cex=4)
+  text(-12,64,paste0(data.y-1,"-",data.y),cex=4)
   
   dev.off()
 }
