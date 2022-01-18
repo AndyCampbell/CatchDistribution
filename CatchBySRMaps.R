@@ -47,7 +47,7 @@ load(".//..//Data//RData//coast.rda")
 load(".//..//Data//RData//NEAFC.rda")
 load(".//..//Data//RData//SR.rda")
 dfSR$SR <- levels(dfSR$Rect)[dfSR$Rect]     #SR as a character
-load(".//..//Data//RData//EEZ.rda")
+load(".//..//Data//RData//EEZ.rda") #eez boundaries
 
 source("SRAnalyFuncs.R")
 
@@ -71,6 +71,30 @@ map.points <- fortify(map, region = "id")
 map.df <- dplyr::inner_join(map.points, map@data, by = "id")
 map.df <- dplyr::inner_join(map.df, eco, by = "iso2")
 
+#17/01/2022
+#Hans request - rectangle WHB data for 2016-2020 for non-eu countries
+#data retrieved from WGWIDE Sharepoint 17/01/2022 (WHB catchesbyrect WHB in folder 06.Data/_catch_by_rectangle)
+#saved to csv
+dfWHB <- read.table(file = file.path(getwd(),"Data","whb.27.1-91214WGCatchBySR.wgwide2021.csv"), 
+                    header = TRUE, sep = ",", stringsAsFactors = FALSE, strip.white = TRUE)
+
+#only interested in 2016-2020
+dfWHB <- dfWHB %>% filter(year>=2016 & year<=2020)
+#quick look at total catches
+dfWHB %>% group_by(year) %>% summarise(Tot=sum(catch))
+
+#assign bloc EU/Non-EU/UK
+dfWHB$bloc <- NA
+dfWHB$bloc[dfWHB$country %in% c("GBR","GBR.EW","GBR.N","GBR.S")] <- "UK"
+dfWHB$bloc[dfWHB$country %in% c("DEU","DNK","ESP","FRA","GER","IRL","LTU","NLD","POL","PRT","SWE")] <- "EU"
+dfWHB$bloc[dfWHB$country %in% c("FRO","GRL","ISL","NOR","RUS")] <- "Non-EU"
+
+dfWHB <- dfWHB %>% group_by(year,rect,bloc) %>% summarise(catch=sum(catch))
+
+dfWHB %>% group_by(year) %>% summarise(Tot=sum(catch))
+
+write.table(dfWHB, file=file.path(getwd(),"Data","whb_2016_2020.csv"), 
+            quote=FALSE, row.names=FALSE, sep=",")
 
 #06/10/2021 - Boarfish
 y <- 2020
@@ -99,7 +123,6 @@ dev.off()
 #mean 2018-2020
 
 #06/10/2021
-
 png(filename = paste0(".\\Plots\\Stockbooks\\",2021,"\\IE","_3yr","_BOC_CBySR.png"),width=1200, height=1600)
 
 fPlotBaseMap(xlim=c(-19,7),ylim=c(45,63),xaxis=F,xlabs=F,yaxis=F,ylabs=F,SR=F,ICES=F)
